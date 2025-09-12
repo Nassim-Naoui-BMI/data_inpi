@@ -1,0 +1,29 @@
+# Répertoire datasets
+dataset/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.env
+.venv
+venv/
+*.venv
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Poetry
+poetry.lock
+
+# token directory
+/src/token_dir/
+
+# settings vscode
+/.vscode
