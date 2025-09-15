@@ -1,6 +1,3 @@
-# Répertoire datasets
-dataset/
-
 # Python
 __pycache__/
 *.py[cod]
@@ -27,3 +24,7 @@ poetry.lock
 
 # settings vscode
 /.vscode
+
+# json draft
+
+json_draft.json
