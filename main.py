@@ -1,4 +1,4 @@
-from data_inpi import ApiRequest, DataCleaning, JsonHandler
+from data_inpi import JsonHandler, ApiRequest, DataCleaning
 import os
 import json
 
@@ -8,12 +8,11 @@ password = os.environ.get("INPI_CLIENT_SECRET")
 
 
 if __name__ == "__main__":
-    # connexion = ApiRequest(auth_url, username, password)
-    # token = connexion.get_access_token()
-    # company_data = connexion.search_company_by_name(token, "BMI GROUP FRANCE")
-    # print(json.dumps(company_data, indent=2, sort_keys=True))
-    # with open("json_draft.json", "r") as f:
-    # data = json.load(f)
-    # new_obj = flatten_json(data)
-    # print(f"Clean object : ${json.dumps(new_obj, indent=2)}")
-    print("hellow world")
+    connexion = ApiRequest(auth_url, username, password)
+    token = connexion.get_access_token()
+    company_data = connexion.search_company_by_name(token, "BMI GROUP FRANCE")
+    data = []
+    for i in range(0, len(company_data)):
+        temp_data = JsonHandler().flatten_json(company_data, i)
+        data.append(temp_data)
+    JsonHandler().print_json(data)

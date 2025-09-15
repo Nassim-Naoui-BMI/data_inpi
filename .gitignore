@@ -25,6 +25,7 @@ poetry.lock
 # settings vscode
 /.vscode
 
-# json draft
+# json draft + test samse
 
 json_draft.json
+samse_test.json
