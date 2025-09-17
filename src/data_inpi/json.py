@@ -15,67 +15,75 @@ class JsonHandler:
         print(f"Clean object : ${json.dumps(data, indent=2)}")
 
     def flatten_json(self, data, index):
-        content_keys = data[index]["formality"]["content"].keys()
-        type_person = (
-            "personneMorale" if "personneMorale" in content_keys else "personnePhysique"
-        )
 
-        new_obj = (
-            {
-                "denomination": data[index]["formality"]["content"][type_person][
-                    "identite"
-                ]["entreprise"]["denomination"],
-                "siren": data[index]["formality"]["content"][type_person]["identite"][
-                    "entreprise"
-                ]["siren"],
-                "nicSiege": data[index]["formality"]["content"][type_person][
-                    "identite"
-                ]["entreprise"]["nicSiege"],
-                "codeApe": data[index]["formality"]["content"][type_person]["identite"][
-                    "entreprise"
-                ]["codeApe"],
-                "formeJuridique": data[index]["formality"]["content"][type_person][
-                    "identite"
-                ]["entreprise"]["formeJuridique"],
-                "pays": data[index]["formality"]["content"][type_person][
-                    "adresseEntreprise"
-                ]["adresse"]["pays"],
-                "numVoie": (
-                    data[index]["formality"]["content"][type_person][
-                        "adresseEntreprise"
-                    ]["adresse"]["numVoie"]
-                    if data[index]["formality"]["content"][type_person][
-                        "adresseEntreprise"
-                    ]["adresse"]["numVoiePresent"]
-                    else None
-                ),
-                "typeVoie": data[index]["formality"]["content"][type_person][
-                    "adresseEntreprise"
-                ]["adresse"]["typeVoie"],
-                "voie": data[index]["formality"]["content"][type_person][
-                    "adresseEntreprise"
-                ]["adresse"]["voie"],
-                "complementLocalisation": (
-                    data[index]["formality"]["content"][type_person][
-                        "adresseEntreprise"
-                    ]["adresse"]["complementLocalisation"]
-                    if data[index]["formality"]["content"][type_person][
-                        "adresseEntreprise"
-                    ]["adresse"]["complementLocalisationPresent"]
-                    else None
-                ),
-                "codePostal": data[index]["formality"]["content"][type_person][
-                    "adresseEntreprise"
-                ]["adresse"]["codePostal"],
-                "commune": data[index]["formality"]["content"][type_person][
-                    "adresseEntreprise"
-                ]["adresse"]["commune"],
-            },
-        )
+        morale_obj = data[index]["formality"]["content"].get("personneMorale", {})
 
-        new_obj[0]["siret"] = new_obj[0]["siren"] + new_obj[0]["nicSiege"]
+        if morale_obj:
+            denomination = morale_obj["identite"]["entreprise"]["denomination"]
+            siren = morale_obj["identite"]["entreprise"]["siren"]
+            nicSiege = morale_obj["identite"]["entreprise"]["nicSiege"]
+            codeApe = morale_obj["identite"]["entreprise"]["codeApe"]
+            formeJuridique = morale_obj["identite"]["entreprise"]["formeJuridique"]
+            pays = morale_obj["adresseEntreprise"]["adresse"]["pays"]
+            numVoie = morale_obj["adresseEntreprise"]["adresse"].get("numVoie", None)
+            typeVoie = morale_obj["adresseEntreprise"]["adresse"].get("typeVoie", None)
+            voie = morale_obj["adresseEntreprise"]["adresse"].get("voie", None)
+            complementLocalisation = morale_obj["adresseEntreprise"]["adresse"].get(
+                "complementLocalisation", None
+            )
+            codePostal = morale_obj["adresseEntreprise"]["adresse"].get(
+                "codePostal", None
+            )
+            commune = morale_obj["adresseEntreprise"]["adresse"].get("commune", None)
+        else:
+            physique_obj = data[index]["formality"]["content"].get(
+                "personnePhysique", {}
+            )
+            nom = physique_obj["identite"]["entrepreneur"]["descriptionPersonne"]["nom"]
+            prenom_list = physique_obj["identite"]["entrepreneur"][
+                "descriptionPersonne"
+            ]["prenoms"]
+            prenom = ",".join(prenom_list)
+            denomination = nom + " " + prenom
+            siren = physique_obj["identite"]["entreprise"]["siren"]
+            nicSiege = physique_obj["identite"]["entreprise"]["nicSiege"]
+            codeApe = physique_obj["identite"]["entreprise"]["codeApe"]
+            formeJuridique = physique_obj["identite"]["entreprise"].get(
+                "formeJuridique", None
+            )
+            pays = physique_obj["adresseEntreprise"]["adresse"]["pays"]
+            numVoie = physique_obj["adresseEntreprise"]["adresse"].get("numVoie", None)
+            typeVoie = physique_obj["adresseEntreprise"]["adresse"].get(
+                "typeVoie", None
+            )
+            voie = physique_obj["adresseEntreprise"]["adresse"].get("voie", None)
+            complementLocalisation = physique_obj["adresseEntreprise"]["adresse"].get(
+                "complementLocalisation", None
+            )
+            codePostal = physique_obj["adresseEntreprise"]["adresse"].get(
+                "codePostal", None
+            )
+            commune = physique_obj["adresseEntreprise"]["adresse"].get("commune", None)
+
+        siret = siren + nicSiege
+
+        new_obj = {
+            "denomination": denomination,
+            "siren": siren,
+            "siret": siret,
+            "codeApe": codeApe,
+            "formeJuridique": formeJuridique,
+            "pays": pays,
+            "numVoie": numVoie,
+            "typeVoie": typeVoie,
+            "voie": voie,
+            "complementLocalisation": complementLocalisation,
+            "codePostal": codePostal,
+            "commune": commune,
+        }
+
         return new_obj
 
-    def create_json_file(data):
+    def create_json_file(self, data):
         with open("samse_draft.json", "w") as f:
             json.dump(data, f, indent=2)
