@@ -46,5 +46,6 @@ class DataCleaning:
             file_name (str): Le nom du fichier Excel à créer.
         """
         full_path = os.path.join(export_path, file_name)
+
         self.df.to_excel(full_path, index=False)
         print(f"DataFrame exporté avec succès vers {full_path}")

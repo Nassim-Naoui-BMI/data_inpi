@@ -124,3 +124,31 @@ class ApiRequest:
                 "Erreur de décodage JSON: la réponse du serveur n'est pas un JSON valide."
             )
         return None
+
+    def search_company_by_siren(self, access_token, siren):
+        """
+        Recherche une entreprise dans l'API RNE en utilisant le jeton d'accès.
+        """
+
+        if not access_token:
+            print("Erreur: Jeton d'accès non valide. Impossible de procéder.")
+            return None
+
+        api_url = f"https://registre-national-entreprises.inpi.fr/api/companies/{siren}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        try:
+            response = requests.get(api_url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.HTTPError as e:
+            print(
+                f"Erreur HTTP lors de la recherche: {e.response.status_code} - {e.response.text}"
+            )
+        except requests.exceptions.RequestException as e:
+            print(f"Erreur de connexion lors de la recherche: {e}")
+        except ValueError:
+            print(
+                "Erreur de décodage JSON: la réponse du serveur n'est pas un JSON valide."
+            )
+        return None

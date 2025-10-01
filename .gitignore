@@ -30,3 +30,4 @@ poetry.lock
 json_draft.json
 samse_test.json
 samse_draft.json
+draft.json
