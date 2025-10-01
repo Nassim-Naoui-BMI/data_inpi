@@ -114,45 +114,40 @@ class JsonHandler:
 
             if lenAutresEtablissement > 0:
                 for i in range(0, lenAutresEtablissement):
-                    description = autresEtablissements[i].get(
-                        "descriptionEtablissement", {}
-                    )
-                    if not "dateEffetFermeture" in description:
-                        temp_obj = {
-                            "enseigne": autresEtablissements[i][
-                                "descriptionEtablissement"
-                            ].get("enseigne", denomination),
-                            "siren": siren,
-                            "siret": autresEtablissements[i][
-                                "descriptionEtablissement"
-                            ].get("siret", None),
-                            "codeApe": autresEtablissements[i][
-                                "descriptionEtablissement"
-                            ].get("codeApe", None),
-                            "formeJuridique": formeJuridique,
-                            "pays": autresEtablissements[i]["adresse"].get(
-                                "pays", None
-                            ),
-                            "numVoie": autresEtablissements[i]["adresse"].get(
-                                "numVoie", None
-                            ),
-                            "typeVoie": autresEtablissements[i]["adresse"].get(
-                                "typeVoie", None
-                            ),
-                            "voie": autresEtablissements[i]["adresse"].get(
-                                "voie", None
-                            ),
-                            "complementLocalisation": autresEtablissements[i][
-                                "adresse"
-                            ].get("complementLocalisation", None),
-                            "codePostal": autresEtablissements[i]["adresse"].get(
-                                "codePostal", None
-                            ),
-                            "commune": autresEtablissements[i]["adresse"].get(
-                                "commune", None
-                            ),
-                        }
-                        autresEtablissementsActifs.append(temp_obj)
+                    temp_obj = {
+                        "enseigne": autresEtablissements[i][
+                            "descriptionEtablissement"
+                        ].get("enseigne", denomination),
+                        "siren": siren,
+                        "siret": autresEtablissements[i][
+                            "descriptionEtablissement"
+                        ].get("siret", None),
+                        "codeApe": autresEtablissements[i][
+                            "descriptionEtablissement"
+                        ].get("codeApe", None),
+                        "formeJuridique": formeJuridique,
+                        "pays": autresEtablissements[i]["adresse"].get("pays", None),
+                        "numVoie": autresEtablissements[i]["adresse"].get(
+                            "numVoie", None
+                        ),
+                        "typeVoie": autresEtablissements[i]["adresse"].get(
+                            "typeVoie", None
+                        ),
+                        "voie": autresEtablissements[i]["adresse"].get("voie", None),
+                        "complementLocalisation": autresEtablissements[i][
+                            "adresse"
+                        ].get("complementLocalisation", None),
+                        "codePostal": autresEtablissements[i]["adresse"].get(
+                            "codePostal", None
+                        ),
+                        "commune": autresEtablissements[i]["adresse"].get(
+                            "commune", None
+                        ),
+                        "dateEffetFermeture": autresEtablissements[i][
+                            "descriptionEtablissement"
+                        ].get("dateEffetFermeture", None),
+                    }
+                    autresEtablissementsActifs.append(temp_obj)
 
         else:
             physique_obj = data["formality"]["content"].get("personnePhysique", {})
