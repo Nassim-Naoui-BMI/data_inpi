@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATA INPI API APP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .dropzone {
+            border: 2px dashed #9ca3af;
+            background-color: #f9fafb;
+            transition: all 0.2s;
+        }
+        .dropzone.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center py-10">
+
+    <div class="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Recherche d'entreprise INPI 🇫🇷</h1>
+            <p class="text-gray-500 mt-2">Recherchez des données d'entreprise via l'API INPI.</p>
+        </div>
+
+        <div class="flex border-b border-gray-200 mb-6">
+            <button id="tab-single" class="tab-button flex-1 py-3 px-6 text-center text-sm font-medium border-b-2 transition duration-150 ease-in-out" data-target="section-single">
+                Recherche Unique
+            </button>
+            <button id="tab-multiple" class="tab-button flex-1 py-3 px-6 text-center text-sm font-medium border-b-2 transition duration-150 ease-in-out" data-target="section-multiple">
+                Recherche Multiple
+            </button>
+        </div>
+
+        <div id="section-single" class="tab-section p-4 border border-gray-200 rounded-lg">
+            <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                <input type="text" id="search-input" placeholder="Entrer le nom ou le SIREN..." class="flex-grow w-full px-4 py-3 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button id="search-button" class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    Rechercher
+                </button>
+            </div>
+            <div class="mt-4 flex items-center justify-center gap-6 mb-8">
+                <label class="flex items-center text-gray-600">
+                    <input type="radio" name="search-type" value="name" class="form-radio h-4 w-4 text-blue-600" checked>
+                    <span class="ml-2">Par nom</span>
+                </label>
+                <label class="flex items-center text-gray-600">
+                    <input type="radio" name="search-type" value="siren" class="form-radio h-4 w-4 text-blue-600">
+                    <span class="ml-2">Par SIREN</span>
+                </label>
+            </div>
+
+            <div class="flex justify-end gap-4 mb-6">
+                <button id="single-export-button" class="flex items-center bg-green-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                    Exporter en Excel
+                </button>
+                <button id="single-token-button" class="flex items-center bg-yellow-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-yellow-600 transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0113 5.4 1 1 0 11-2-.2C14.7 6.1 10.7 3.9 6 6.3V5a1 1 0 012 0v3a1 1 0 01-1 1H4a1 1 0 110-2h1.293a5.002 5.002 0 001.323-2.6A5.002 5.002 0 004 5V3a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                    Rafraîchir Token
+                </button>
+            </div>
+            
+            <div id="results-container-single">
+                <div id="loader-single" class="hidden flex justify-center items-center py-8">
+                    <div class="loader"></div>
+                </div>
+                <div id="error-message-single" class="hidden text-center bg-red-100 text-red-700 p-4 rounded-lg">
+                    <p>Erreur: Impossible de récupérer les résultats. Vérifiez votre requête ou réessayez.</p>
+                </div>
+                <div id="no-results-single" class="hidden text-center text-gray-500 py-8">
+                    <p>Aucune entreprise trouvée pour cette recherche.</p>
+                </div>
+                <div id="results-list-single" class="space-y-4">
+                    </div>
+            </div>
+        </div>
+
+        <div id="section-multiple" class="tab-section p-4 border border-gray-200 rounded-lg hidden">
+            <div id="dropzone" class="dropzone p-10 text-center rounded-lg cursor-pointer mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 5 0115.9 6h1.1a2 2 0 012 2v1a4 4 0 01-4 4h-2m-4-4l-4 4-4-4m8 4V4" /></svg>
+                <p class="mt-1 text-sm text-gray-600"><strong class="font-semibold">Glissez-déposez</strong> votre fichier Excel ici ou <span class="text-blue-600">cliquez pour sélectionner</span>.</p>
+                <p class="text-xs text-gray-500 mt-1">(Le fichier doit contenir une colonne "SIREN" ou "Nom" en première ligne)</p>
+                <input type="file" id="file-input" accept=".xlsx, .xls" class="hidden">
+            </div>
+
+            <div id="multiple-status" class="mb-6 hidden">
+                <p id="file-name-display" class="text-sm text-gray-600 mb-2"></p>
+                <p id="total-companies-display" class="text-lg font-medium text-gray-800 mb-4"></p>
+                <div id="progress-bar-container" class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+                <p id="companies-found-display" class="text-2xl font-bold text-green-600 text-center">
+                    0 entreprises trouvées
+                </p>
+            </div>
+
+            <div class="flex justify-end gap-4">
+                <button id="multiple-start-button" class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 hidden" disabled>
+                    Démarrer la recherche
+                </button>
+            </div>
+            <div class="flex justify-end gap-4 mt-6">
+                 <button id="multiple-export-button" class="flex items-center bg-green-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                    Exporter les résultats
+                </button>
+                <button id="multiple-token-button" class="flex items-center bg-yellow-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-yellow-600 transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0113 5.4 1 1 0 11-2-.2C14.7 6.1 10.7 3.9 6 6.3V5a1 1 0 012 0v3a1 1 0 01-1 1H4a1 1 0 110-2h1.293a5.002 5.002 0 001.323-2.6A5.002 5.002 0 004 5V3a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                    Rafraîchir Token
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Éléments du DOM ---
+            // Navigation
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabSections = document.querySelectorAll('.tab-section');
+
+            // Recherche Unique
+            const searchButtonSingle = document.getElementById('search-button');
+            const searchInput = document.getElementById('search-input');
+            const resultsListSingle = document.getElementById('results-list-single');
+            const loaderSingle = document.getElementById('loader-single');
+            const errorMessageSingle = document.getElementById('error-message-single');
+            const noResultsSingle = document.getElementById('no-results-single');
+            const singleExportButton = document.getElementById('single-export-button');
+            const singleTokenButton = document.getElementById('single-token-button');
+            let lastSingleResults = []; // Pour l'export
+
+            // Recherche Multiple
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-input');
+            const multipleStatus = document.getElementById('multiple-status');
+            const fileNameDisplay = document.getElementById('file-name-display');
+            const totalCompaniesDisplay = document.getElementById('total-companies-display');
+            const companiesFoundDisplay = document.getElementById('companies-found-display');
+            const progressBar = document.getElementById('progress-bar');
+            const multipleStartButton = document.getElementById('multiple-start-button');
+            const multipleExportButton = document.getElementById('multiple-export-button');
+            const multipleTokenButton = document.getElementById('multiple-token-button');
+            let companiesToSearch = [];
+            let multipleSearchResults = [];
+
+            // --- Logique de Navigation (Tabs) ---
+            function switchTab(targetId) {
+                tabSections.forEach(section => {
+                    section.classList.add('hidden');
+                });
+                document.getElementById(targetId).classList.remove('hidden');
+
+                tabButtons.forEach(button => {
+                    button.style.borderColor = (button.dataset.target === targetId) ? '#3b82f6' : 'transparent';
+                    button.style.color = (button.dataset.target === targetId) ? '#1f2937' : '#6b7280';
+                });
+            }
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    switchTab(e.currentTarget.dataset.target);
+                });
+            });
+
+            // Initialisation: afficher la première section par défaut
+            switchTab('section-single');
+
+            // --- Fonctions d'Action Globales ---
+
+            // Rafraîchir le Token (Mock)
+            function refreshAuthToken(section) {
+                alert(`Rafraîchissement du Token pour la section ${section}. \n(Implémentation backend nécessaire)`);
+            }
+
+            // Exporter en Excel (Mock/Utilitaire)
+            function exportToExcel(data, filename) {
+                if (data.length === 0) {
+                    alert("Aucune donnée à exporter.");
+                    return;
+                }
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Résultats INPI");
+                XLSX.writeFile(wb, filename);
+                alert(`Exportation de ${data.length} résultats réussie!`);
+            }
+
+            singleTokenButton.addEventListener('click', () => refreshAuthToken('unique'));
+            multipleTokenButton.addEventListener('click', () => refreshAuthToken('multiple'));
+
+            // --- Logique de la Recherche Unique ---
+
+            searchButtonSingle.addEventListener('click', performSearchSingle);
+            searchInput.addEventListener('keyup', (event) => {
+                if (event.key === 'Enter') {
+                    performSearchSingle();
+                }
+            });
+            singleExportButton.addEventListener('click', () => {
+                // Utiliser les derniers résultats pour l'export
+                exportToExcel(lastSingleResults, 'Recherche_Unique_INPI.xlsx');
+            });
+
+
+            async function performSearchSingle() {
+                const query = searchInput.value.trim();
+                const searchType = document.querySelector('input[name="search-type"]:checked').value;
+
+                if (!query) {
+                    alert('Veuillez entrer un terme de recherche.');
+                    return;
+                }
+
+                // Reset UI
+                resultsListSingle.innerHTML = '';
+                errorMessageSingle.classList.add('hidden');
+                noResultsSingle.classList.add('hidden');
+                loaderSingle.classList.remove('hidden');
+                lastSingleResults = [];
+
+                try {
+                    // Remplacer ceci par votre appel API réel
+                    const data = await mockApiCallSingle(query, searchType);
+
+                    loaderSingle.classList.add('hidden');
+
+                    if (data && data.results && data.results.length > 0) {
+                        lastSingleResults = data.results.map(c => ({
+                            Denomination: c.denomination,
+                            SIREN: c.siren,
+                            'Forme Juridique': c.formality?.content?.personneMorale?.identite?.formeJuridique || 'N/A',
+                            Adresse: formatAddress(c),
+                            // Ajoutez ici d'autres champs que vous souhaitez exporter
+                        }));
+                        displayResultsSingle(data.results);
+                        singleExportButton.disabled = false;
+                    } else {
+                        noResultsSingle.classList.remove('hidden');
+                        singleExportButton.disabled = true;
+                    }
+                } catch (error) {
+                    console.error('Search failed:', error);
+                    loaderSingle.classList.add('hidden');
+                    errorMessageSingle.classList.remove('hidden');
+                    singleExportButton.disabled = true;
+                }
+            }
+
+            function formatAddress(company) {
+                let address = 'Non disponible';
+                if (company.formality && company.formality.content && company.formality.content.personneMorale && company.formality.content.personneMorale.adresseEntreprise) {
+                    const addr = company.formality.content.personneMorale.adresseEntreprise;
+                    address = `${addr.voie || ''} ${addr.codePostal || ''} ${addr.commune || ''}`.trim();
+                }
+                return address;
+            }
+
+            function displayResultsSingle(companies) {
+                companies.forEach(company => {
+                    const companyCard = document.createElement('div');
+                    companyCard.className = 'bg-gray-50 border border-gray-200 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300';
+                    const address = formatAddress(company);
+                    const legalStatus = company.formality?.content?.personneMorale?.identite?.formeJuridique || 'N/A';
+                    
+                    companyCard.innerHTML = `
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-3">
+                            <h3 class="text-xl font-bold text-gray-900">${company.denomination || 'Nom Inconnu'}</h3>
+                            <span class="text-sm font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded-md mt-2 sm:mt-0">SIREN: ${company.siren}</span>
+                        </div>
+                        <p class="text-gray-600"><strong class="font-medium text-gray-800">Forme juridique:</strong> ${legalStatus}</p>
+                        <p class="text-gray-600"><strong class="font-medium text-gray-800">Adresse:</strong> ${address}</p>
+                    `;
+                    resultsListSingle.appendChild(companyCard);
+                });
+            }
+
+            // --- Logique de la Recherche Multiple ---
+
+            // 1. Gestion du Drag and Drop
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('dragover');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length) {
+                    processFile(files[0]);
+                }
+            });
+
+            dropzone.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    processFile(e.target.files[0]);
+                }
+            });
+            
+            // 2. Traitement du fichier Excel
+            function processFile(file) {
+                if (!file.name.match(/\.(xlsx|xls)$/)) {
+                    alert("Veuillez déposer un fichier Excel (.xlsx ou .xls).");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheet = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheet];
+                        
+                        // Convertir la feuille en JSON
+                        const json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                        
+                        // Assumer que la première ligne contient les en-têtes (Nom ou SIREN)
+                        const headers = json[0];
+                        const sirenIndex = headers.findIndex(h => h.toUpperCase().includes('SIREN'));
+                        const nameIndex = headers.findIndex(h => h.toUpperCase().includes('NOM'));
+
+                        if (sirenIndex === -1 && nameIndex === -1) {
+                            alert("Le fichier doit contenir une colonne nommée 'SIREN' ou 'Nom'.");
+                            return;
+                        }
+
+                        // Préparer la liste des entreprises à rechercher (exclure l'en-tête)
+                        companiesToSearch = json.slice(1).map(row => {
+                            // On priorise le SIREN s'il est présent
+                            if (sirenIndex !== -1 && row[sirenIndex]) {
+                                return { type: 'siren', query: String(row[sirenIndex]).trim() };
+                            }
+                            if (nameIndex !== -1 && row[nameIndex]) {
+                                return { type: 'name', query: String(row[nameIndex]).trim() };
+                            }
+                            return null; // Ligne vide ou sans donnée pertinente
+                        }).filter(item => item !== null);
+
+                        if (companiesToSearch.length === 0) {
+                            alert("Aucune donnée d'entreprise valide trouvée dans le fichier.");
+                            return;
+                        }
+
+                        // Affichage du statut
+                        fileNameDisplay.textContent = `Fichier traité : ${file.name}`;
+                        totalCompaniesDisplay.textContent = `${companiesToSearch.length} entreprises prêtes pour la recherche.`;
+                        multipleStatus.classList.remove('hidden');
+                        companiesFoundDisplay.textContent = '0 entreprises trouvées';
+                        progressBar.style.width = '0%';
+                        multipleStartButton.classList.remove('hidden');
+                        multipleStartButton.disabled = false;
+                        multipleExportButton.disabled = true; // Désactiver l'export tant qu'aucune recherche n'est faite
+                        multipleSearchResults = []; // Réinitialiser les résultats
+                    
+                    } catch (error) {
+                        console.error('Erreur de lecture du fichier Excel:', error);
+                        alert("Erreur lors de la lecture du fichier. Assurez-vous qu'il est bien formaté.");
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            // 3. Lancement de la Recherche Multiple
+            multipleStartButton.addEventListener('click', performSearchMultiple);
+            multipleExportButton.addEventListener('click', () => {
+                exportToExcel(multipleSearchResults, 'Recherche_Multiple_INPI_Resultats.xlsx');
+            });
+
+            async function performSearchMultiple() {
+                if (companiesToSearch.length === 0) {
+                    alert("Veuillez d'abord charger un fichier avec des entreprises.");
+                    return;
+                }
+
+                multipleStartButton.disabled = true;
+                multipleSearchResults = [];
+                let foundCount = 0;
+
+                for (let i = 0; i < companiesToSearch.length; i++) {
+                    const company = companiesToSearch[i];
+                    
+                    try {
+                        // REMPLACER cet appel mock par votre appel backend réel qui gère la recherche
+                        const data = await mockApiCallSingle(company.query, company.type);
+                        
+                        if (data && data.results && data.results.length > 0) {
+                            foundCount++;
+                            // Ajouter le résultat à la liste pour l'export
+                            multipleSearchResults.push({
+                                'Recherche Type': company.type,
+                                'Recherche Valeur': company.query,
+                                Denomination: data.results[0].denomination,
+                                SIREN: data.results[0].siren,
+                                'Forme Juridique': data.results[0].formality?.content?.personneMorale?.identite?.formeJuridique || 'N/A',
+                                Adresse: formatAddress(data.results[0]),
+                            });
+                        }
+                    } catch (error) {
+                        console.error(`Erreur de recherche pour ${company.query}:`, error);
+                        // Logique pour gérer les erreurs pour une entreprise spécifique si nécessaire
+                    }
+
+                    // Mise à jour de la barre de progression et du compte
+                    const progress = ((i + 1) / companiesToSearch.length) * 100;
+                    progressBar.style.width = `${progress}%`;
+                    companiesFoundDisplay.textContent = `${foundCount} entreprises trouvées`;
+                }
+
+                alert(`Recherche multiple terminée. ${foundCount} entreprises trouvées.`);
+                multipleStartButton.disabled = false;
+                multipleExportButton.disabled = foundCount === 0;
+            }
+
+            // --- Fonctions Mock (À remplacer par l'API backend) ---
+
+            async function mockApiCallSingle(query, type) {
+                console.log(`Mock searching for "${query}" by "${type}"`);
+                await new Promise(resolve => setTimeout(resolve, 500)); // Simuler délai réseau
+
+                if (type === 'name' && query.toLowerCase().includes('tech')) {
+                    return {
+                        "total_results": 2,
+                        "results": [
+                            {
+                                "siren": "123456789",
+                                "denomination": "Global Tech Solutions",
+                                "formality": { "content": { "personneMorale": { "identite": {"formeJuridique": "SAS"}, "adresseEntreprise": { "voie": "123 Tech Avenue", "codePostal": "75001", "commune": "Paris" } } } }
+                            },
+                            {
+                                "siren": "987654321",
+                                "denomination": "Innovate Tech Inc.",
+                                "formality": { "content": { "personneMorale": { "identite": {"formeJuridique": "SARL"}, "adresseEntreprise": { "voie": "456 Innovation Drive", "codePostal": "69002", "commune": "Lyon" } } } }
+                            }
+                        ]
+                    };
+                }
+
+                if (type === 'siren' && query === '123456789') {
+                     return {
+                        "total_results": 1,
+                        "results": [{
+                             "siren": "123456789",
+                             "denomination": "TEST SIREN FOUND",
+                             "formality": { "content": { "personneMorale": { "identite": {"formeJuridique": "SAS"}, "adresseEntreprise": { "voie": "123 Tech Avenue", "codePostal": "75001", "commune": "Paris" } } } }
+                        }]
+                    };
+                }
+
+                return { total_results: 0, results: [] };
+            }
+        });
+    </script>
+</body>
+</html>
