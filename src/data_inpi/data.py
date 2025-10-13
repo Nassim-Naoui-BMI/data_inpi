@@ -40,6 +40,13 @@ class DataCleaning:
 
     # -----------------------------------------------------------------------------------
 
+    def get_name_siren_arrays():
+        """
+        stock les noms d'entreprise et les siren dans arrays distincts.
+        """
+
+    # -----------------------------------------------------------------------------------
+
     def export_etablissements_to_excel(
         self,
         data_entreprises: List[Dict[str, Any]],

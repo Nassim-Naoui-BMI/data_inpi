@@ -114,9 +114,20 @@ class ApiRequest:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.HTTPError as e:
-            print(
-                f"Erreur HTTP lors de la recherche: {e.response.status_code} - {e.response.text}"
-            )
+            if e.response.status_code == 429:
+                retry_after_value = e.response.headers.get("Retry-After")
+                if retry_after_value:
+                    print(
+                        f" ⚠️ Erreur HTTP lors de la recherche: {e.response.status_code} - {e.response.text} - temps d'attente: {retry_after_value}"
+                    )
+                else:
+                    print(
+                        f"⚠️ Erreur HTTP lors de la recherche: {e.response.status_code} - {e.response.text} - temps d'attente: non communiqué"
+                    )
+            else:
+                print(
+                    f"Erreur HTTP lors de la recherche: {e.response.status_code} - {e.response.text}"
+                )
         except requests.exceptions.RequestException as e:
             print(f"Erreur de connexion lors de la recherche: {e}")
         except ValueError:
@@ -142,9 +153,21 @@ class ApiRequest:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.HTTPError as e:
-            print(
-                f"Erreur HTTP lors de la recherche: {e.response.status_code} - {e.response.text}"
-            )
+            if e.response.status_code == 429:
+
+                retry_after_value = e.response.headers.get("Retry-After")
+                if retry_after_value:
+                    print(
+                        f" ⚠️ Erreur HTTP lors de la recherche: {e.response.status_code} - {e.response.text} - temps d'attente: {retry_after_value}"
+                    )
+                else:
+                    print(
+                        f"⚠️ Erreur HTTP lors de la recherche: {e.response.status_code} - {e.response.text} - temps d'attente: non communiqué"
+                    )
+            else:
+                print(
+                    f"Erreur HTTP lors de la recherche: {e.response.status_code} - {e.response.text}"
+                )
         except requests.exceptions.RequestException as e:
             print(f"Erreur de connexion lors de la recherche: {e}")
         except ValueError:

@@ -14,7 +14,7 @@ class JsonHandler:
     def print_json(self):
         print(f"Clean object : ${json.dumps(self, indent=2)}")
 
-    def flatten_json_company_name(self, data, index):
+    def flatten_json_company_name(data, index):
 
         morale_obj = data[index]["formality"]["content"].get("personneMorale", {})
 
