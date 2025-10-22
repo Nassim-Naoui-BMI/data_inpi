@@ -85,5 +85,4 @@ if __name__ == "__main__":
     )
 
     print(f" error array: {list_error}")
-    print(f" objet final: {list_company}")
     print(f"Fin d'exécution: ${datetime.datetime.now()}")
