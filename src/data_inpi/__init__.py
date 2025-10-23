@@ -1,11 +1,10 @@
-from .api import ApiRequest
-from .data import DataCleaning
-from .json import JsonHandler
-
 from flask import Flask
+from .routes import bp as routes_bp
+from .config import Config
 
 
 def create_app():
-    app = Flask(__name__, static_folder="static", template_folder="templates")
-
+    app = Flask(__name__)
+    app.config.from_object(Config)
+    app.register_blueprint(routes_bp)
     return app

@@ -5,7 +5,7 @@ import time
 
 class ApiRequest:
 
-    def __init__(self, auth_url, username, password):
+    def __init__(self, auth_url, api_url, username, password):
         """
         Initialise l'objet ApiRequest avec les informations d'authentification.
 
@@ -15,6 +15,7 @@ class ApiRequest:
             password (str): Le secret client pour l'authentification.
         """
         self.auth_url = auth_url
+        self.api_url = api_url
         self.username = username
         self.password = password
         self.access_token = self._load_token()
@@ -105,7 +106,7 @@ class ApiRequest:
             print("Erreur: Jeton d'accès non valide. Impossible de procéder.")
             return None
 
-        api_url = "https://registre-national-entreprises.inpi.fr/api/companies"
+        api_url = self.api_url
         headers = {"Authorization": f"Bearer {access_token}"}
         params = {"companyName": company_name}
 
