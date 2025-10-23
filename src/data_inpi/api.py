@@ -77,6 +77,7 @@ class ApiRequest:
             if not token:
                 raise ValueError("Aucun jeton d'accès trouvé dans la réponse de l'API.")
 
+            self.access_token = token
             self._save_token({"access_token": token})
             return self.access_token
 

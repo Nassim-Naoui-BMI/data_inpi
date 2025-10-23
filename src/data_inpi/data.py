@@ -96,7 +96,7 @@ class DataCleaning:
         try:
             with pd.ExcelWriter(
                 file_name, engine="openpyxl"
-            ) as writer:  # J'utilise 'openpyxl' ici car il est plus courant
+            ) as writer: 
                 df_principaux.to_excel(writer, sheet_name=principaux_sheet, index=False)
                 df_secondaires.to_excel(
                     writer, sheet_name=secondaires_sheet, index=False

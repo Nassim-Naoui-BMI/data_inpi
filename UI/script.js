@@ -1,0 +1,408 @@
+document.addEventListener("DOMContentLoaded", () => {
+  // --- Éléments du DOM ---
+  // Navigation
+  const tabButtons = document.querySelectorAll(".tab-button");
+  const tabSections = document.querySelectorAll(".tab-section");
+
+  // Recherche Unique
+  const searchButtonSingle = document.getElementById("search-button");
+  const searchInput = document.getElementById("search-input");
+  const resultsListSingle = document.getElementById("results-list-single");
+  const loaderSingle = document.getElementById("loader-single");
+  const errorMessageSingle = document.getElementById("error-message-single");
+  const noResultsSingle = document.getElementById("no-results-single");
+  const singleExportButton = document.getElementById("single-export-button");
+  const singleTokenButton = document.getElementById("single-token-button");
+  let lastSingleResults = []; // Pour l'export
+
+  // Recherche Multiple
+  const dropzone = document.getElementById("dropzone");
+  const fileInput = document.getElementById("file-input");
+  const multipleStatus = document.getElementById("multiple-status");
+  const fileNameDisplay = document.getElementById("file-name-display");
+  const totalCompaniesDisplay = document.getElementById(
+    "total-companies-display"
+  );
+  const companiesFoundDisplay = document.getElementById(
+    "companies-found-display"
+  );
+  const progressBar = document.getElementById("progress-bar");
+  const multipleStartButton = document.getElementById("multiple-start-button");
+  const multipleExportButton = document.getElementById(
+    "multiple-export-button"
+  );
+  const multipleTokenButton = document.getElementById("multiple-token-button");
+  let companiesToSearch = [];
+  let multipleSearchResults = [];
+
+  // --- Logique de Navigation (Tabs) ---
+  function switchTab(targetId) {
+    tabSections.forEach((section) => {
+      section.classList.add("hidden");
+    });
+    document.getElementById(targetId).classList.remove("hidden");
+
+    tabButtons.forEach((button) => {
+      button.style.borderColor =
+        button.dataset.target === targetId ? "#3b82f6" : "transparent";
+      button.style.color =
+        button.dataset.target === targetId ? "#1f2937" : "#6b7280";
+    });
+  }
+
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", (e) => {
+      switchTab(e.currentTarget.dataset.target);
+    });
+  });
+
+  // Initialisation: afficher la première section par défaut
+  switchTab("section-single");
+
+  // --- Fonctions d'Action Globales ---
+
+  // Rafraîchir le Token (Mock)
+  function refreshAuthToken() {
+    fetch("http://127.0.0.1:5000/token", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Token reçu :", data);
+      })
+      .catch((error) => {
+        console.error("Erreur :", error);
+      });
+  }
+
+  // Exporter en Excel (Mock/Utilitaire)
+  function exportToExcel(data, filename) {
+    if (data.length === 0) {
+      alert("Aucune donnée à exporter.");
+      return;
+    }
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Résultats INPI");
+    XLSX.writeFile(wb, filename);
+    alert(`Exportation de ${data.length} résultats réussie!`);
+  }
+
+  singleTokenButton.addEventListener("click", () => refreshAuthToken("unique"));
+  multipleTokenButton.addEventListener("click", () =>
+    refreshAuthToken("multiple")
+  );
+
+  // --- Logique de la Recherche Unique ---
+
+  searchButtonSingle.addEventListener("click", performSearchSingle);
+  searchInput.addEventListener("keyup", (event) => {
+    if (event.key === "Enter") {
+      performSearchSingle();
+    }
+  });
+  singleExportButton.addEventListener("click", () => {
+    // Utiliser les derniers résultats pour l'export
+    exportToExcel(lastSingleResults, "Recherche_Unique_INPI.xlsx");
+  });
+
+  async function performSearchSingle() {
+    const query = searchInput.value.trim();
+    const searchType = document.querySelector(
+      'input[name="search-type"]:checked'
+    ).value;
+
+    if (!query) {
+      alert("Veuillez entrer un terme de recherche.");
+      return;
+    }
+
+    // Reset UI
+    resultsListSingle.innerHTML = "";
+    errorMessageSingle.classList.add("hidden");
+    noResultsSingle.classList.add("hidden");
+    loaderSingle.classList.remove("hidden");
+    lastSingleResults = [];
+
+    try {
+      // Remplacer ceci par votre appel API réel
+      const data = await mockApiCallSingle(query, searchType);
+      console.log(data);
+
+      loaderSingle.classList.add("hidden");
+
+      if (data && data.results && data.total_results > 0) {
+        lastSingleResults = data.results.map((c) => ({
+          Denomination: c.denomination,
+          SIREN: c.siren,
+          "Forme Juridique": c.formeJuridique || "N/A",
+          Adresse: formatAddress(c),
+          // Ajoutez ici d'autres champs que vous souhaitez exporter
+        }));
+        displayResultsSingle(data.results);
+        singleExportButton.disabled = false;
+      } else {
+        noResultsSingle.classList.remove("hidden");
+        singleExportButton.disabled = true;
+      }
+    } catch (error) {
+      console.error("Search failed:", error);
+      loaderSingle.classList.add("hidden");
+      errorMessageSingle.classList.remove("hidden");
+      singleExportButton.disabled = true;
+    }
+  }
+
+  function formatAddress(company) {
+    let address = "Non disponible";
+
+    address = `${company.voie || ""} ${company.codePostal || ""} ${
+      company.commune || ""
+    }`.trim();
+
+    return address;
+  }
+
+  function displayResultsSingle(companies) {
+    companies.forEach((company) => {
+      const companyCard = document.createElement("div");
+      companyCard.className =
+        "bg-gray-50 border border-gray-200 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300";
+      const address = formatAddress(company);
+
+      companyCard.innerHTML = `
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-3">
+                            <h3 class="text-xl font-bold text-gray-900">${
+                              company.denomination || "Nom Inconnu"
+                            }</h3>
+                            <span class="text-sm font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded-md mt-2 sm:mt-0">SIREN: ${
+                              company.siren
+                            }</span>
+                        </div>
+                        <p class="text-gray-600"><strong class="font-medium text-gray-800">SIRET:</strong> ${
+                          company.siret
+                        }</p>
+                        <p class="text-gray-600"><strong class="font-medium text-gray-800">Forme juridique:</strong> ${
+                          company.formeJuridique
+                        }</p>
+                        <p class="text-gray-600"><strong class="font-medium text-gray-800">Adresse:</strong> ${address}</p>
+                    `;
+      resultsListSingle.appendChild(companyCard);
+    });
+  }
+
+  // --- Logique de la Recherche Multiple ---
+
+  // 1. Gestion du Drag and Drop
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.classList.add("dragover");
+  });
+
+  dropzone.addEventListener("dragleave", () => {
+    dropzone.classList.remove("dragover");
+  });
+
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("dragover");
+    const files = e.dataTransfer.files;
+    if (files.length) {
+      processFile(files[0]);
+    }
+  });
+
+  dropzone.addEventListener("click", () => {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener("change", (e) => {
+    if (e.target.files.length) {
+      processFile(e.target.files[0]);
+    }
+  });
+
+  // 2. Traitement du fichier Excel
+  function processFile(file) {
+    if (!file.name.match(/\.(xlsx|xls)$/)) {
+      alert("Veuillez déposer un fichier Excel (.xlsx ou .xls).");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const firstSheet = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheet];
+
+        // Convertir la feuille en JSON
+        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        // Assumer que la première ligne contient les en-têtes (Nom ou SIREN)
+        const headers = json[0];
+        const sirenIndex = headers.findIndex((h) =>
+          h.toUpperCase().includes("SIREN")
+        );
+        const nameIndex = headers.findIndex((h) =>
+          h.toUpperCase().includes("NOM")
+        );
+
+        if (sirenIndex === -1 && nameIndex === -1) {
+          alert(
+            "Le fichier doit contenir une colonne nommée 'SIREN' ou 'Nom'."
+          );
+          return;
+        }
+
+        // Préparer la liste des entreprises à rechercher (exclure l'en-tête)
+        companiesToSearch = json
+          .slice(1)
+          .map((row) => {
+            // On priorise le SIREN s'il est présent
+            if (sirenIndex !== -1 && row[sirenIndex]) {
+              return { type: "siren", query: String(row[sirenIndex]).trim() };
+            }
+            if (nameIndex !== -1 && row[nameIndex]) {
+              return { type: "name", query: String(row[nameIndex]).trim() };
+            }
+            return null; // Ligne vide ou sans donnée pertinente
+          })
+          .filter((item) => item !== null);
+
+        if (companiesToSearch.length === 0) {
+          alert("Aucune donnée d'entreprise valide trouvée dans le fichier.");
+          return;
+        }
+
+        // Affichage du statut
+        fileNameDisplay.textContent = `Fichier traité : ${file.name}`;
+        totalCompaniesDisplay.textContent = `${companiesToSearch.length} entreprises prêtes pour la recherche.`;
+        multipleStatus.classList.remove("hidden");
+        companiesFoundDisplay.textContent = "0 entreprises trouvées";
+        progressBar.style.width = "0%";
+        multipleStartButton.classList.remove("hidden");
+        multipleStartButton.disabled = false;
+        multipleExportButton.disabled = true; // Désactiver l'export tant qu'aucune recherche n'est faite
+        multipleSearchResults = []; // Réinitialiser les résultats
+      } catch (error) {
+        console.error("Erreur de lecture du fichier Excel:", error);
+        alert(
+          "Erreur lors de la lecture du fichier. Assurez-vous qu'il est bien formaté."
+        );
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // 3. Lancement de la Recherche Multiple
+  multipleStartButton.addEventListener("click", performSearchMultiple);
+  multipleExportButton.addEventListener("click", () => {
+    exportToExcel(
+      multipleSearchResults,
+      "Recherche_Multiple_INPI_Resultats.xlsx"
+    );
+  });
+
+  async function performSearchMultiple() {
+    if (companiesToSearch.length === 0) {
+      alert("Veuillez d'abord charger un fichier avec des entreprises.");
+      return;
+    }
+
+    multipleStartButton.disabled = true;
+    multipleSearchResults = [];
+    let foundCount = 0;
+
+    for (let i = 0; i < companiesToSearch.length; i++) {
+      const company = companiesToSearch[i];
+
+      try {
+        // REMPLACER cet appel mock par votre appel backend réel qui gère la recherche
+        const data = await mockApiCallSingle(company.query, company.type);
+
+        if (data && data.results && data.results.length > 0) {
+          foundCount++;
+          // Ajouter le résultat à la liste pour l'export
+          multipleSearchResults.push({
+            "Recherche Type": company.type,
+            "Recherche Valeur": company.query,
+            Denomination: data.results[0].denomination,
+            SIREN: data.results[0].siren,
+            "Forme Juridique":
+              data.results[0].formality?.content?.personneMorale?.identite
+                ?.formeJuridique || "N/A",
+            Adresse: formatAddress(data.results[0]),
+          });
+        }
+      } catch (error) {
+        console.error(`Erreur de recherche pour ${company.query}:`, error);
+        // Logique pour gérer les erreurs pour une entreprise spécifique si nécessaire
+      }
+
+      // Mise à jour de la barre de progression et du compte
+      const progress = ((i + 1) / companiesToSearch.length) * 100;
+      progressBar.style.width = `${progress}%`;
+      companiesFoundDisplay.textContent = `${foundCount} entreprises trouvées`;
+    }
+
+    alert(`Recherche multiple terminée. ${foundCount} entreprises trouvées.`);
+    multipleStartButton.disabled = false;
+    multipleExportButton.disabled = foundCount === 0;
+  }
+
+  // --- Fonctions Mock (À remplacer par l'API backend) ---
+
+  async function mockApiCallSingle(query, type) {
+    console.log(`Mock searching for "${query}" by "${type}"`);
+
+    // 1. Simuler délai réseau
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    try {
+      // 2. Utiliser await pour attendre la réponse de fetch
+      const response = await fetch(
+        `http://127.0.0.1:5000/inpi/${type}/${query}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Gérer les erreurs HTTP (404, 500, etc.)
+      if (!response.ok) {
+        // Créer une erreur personnalisée avec le statut
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // 3. Utiliser await pour attendre la conversion JSON
+      const data = await response.json();
+
+      console.log(`API Call accepted for : ${query}`);
+
+      // 4. La fonction async renvoie cette valeur (elle sera la valeur de la promesse résolue)
+      if (type === "siren") {
+        return {
+          total_results: 1,
+          results: [data],
+        };
+      } else if (type === "name") {
+        return {
+          total_results: data.length,
+          results: data,
+        };
+      }
+    } catch (error) {
+      // 5. Gérer les erreurs réseau ou HTTP
+      console.error("Erreur lors de l'appel API :", error.message);
+      // Retourner un résultat vide en cas d'échec
+      return { total_results: 0, results: [] };
+    }
+  }
+});

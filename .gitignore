@@ -25,12 +25,13 @@ poetry.lock
 # settings vscode
 /.vscode
 
-# json draft + test samse
+#.env
+.env
 
+# json draft + test samse
 json_draft.json
 samse_test.json
 samse_draft.json
 draft.json
 rapport_final_etablissements.xlsx
-
 data_import
