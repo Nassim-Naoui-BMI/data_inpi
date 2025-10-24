@@ -86,13 +86,22 @@ def get_inpi_data_by_name(companyName):
     return list_company
 
 
-bp.route("/getExcel", methods=["GET"])
+@bp.route("/getExcel", methods=["POST"])
+def edit_excel():
+    try:
+        data_json = request.get_json()
+    except:
+        return {"error": "Le corps de la requête doit être un JSON valide"}, 400
 
+    if data_json is None:
+        return {"error": "Le JSON n'est pas fourni dans la requête."}, 400
 
-def edit_excel(data):
+    data_pour_export = data_json
+
     cleaner = DataCleaning()
     user = UserMangement()
-
     path = user.get_downloads_folder()
 
-    cleaner()
+    cleaner.export_etablissements_to_excel(data_pour_export, path)
+
+    return {"message": "Export Excel démarré avec succès."}, 200

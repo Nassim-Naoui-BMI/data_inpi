@@ -50,6 +50,7 @@ class DataCleaning:
     def export_etablissements_to_excel(
         self,
         data_entreprises: List[Dict[str, Any]],
+        directory,
         file_name: str = "export_etablissements.xlsx",
         principaux_sheet: str = "Etablissements_Principaux",
         secondaires_sheet: str = "Autres_Etablissements",
@@ -71,13 +72,13 @@ class DataCleaning:
             # Traitement de l'établissement principal
             principal = entreprise.copy()
             # On retire la clé des secondaires avant d'ajouter le principal au DataFrame
-            if "autresEtablissementsActifs" in principal:
-                del principal["autresEtablissementsActifs"]
+            if "autresEtablissementsTrouves" in principal:
+                del principal["autresEtablissementsTrouves"]
             principaux_data.append(principal)
 
             # Traitement des établissements secondaires
             # Utilisation de .get() avec une liste vide comme valeur par défaut []
-            etablissements_actifs = entreprise.get("autresEtablissementsActifs", [])
+            etablissements_actifs = entreprise.get("autresEtablissementsTrouves", [])
 
             for etablissement in etablissements_actifs:
                 # AUCUNE MODIFICATION : On ajoute l'établissement tel quel
@@ -95,8 +96,8 @@ class DataCleaning:
 
         try:
             with pd.ExcelWriter(
-                file_name, engine="openpyxl"
-            ) as writer: 
+                directory + "/" + file_name, engine="openpyxl"
+            ) as writer:
                 df_principaux.to_excel(writer, sheet_name=principaux_sheet, index=False)
                 df_secondaires.to_excel(
                     writer, sheet_name=secondaires_sheet, index=False

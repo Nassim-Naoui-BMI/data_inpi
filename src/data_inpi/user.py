@@ -7,7 +7,7 @@ class UserMangement:
     def __init__(self):
         pass
 
-    def get_downloads_folder():
+    def get_downloads_folder(self):
         """
         Tente de déterminer le chemin par défaut du dossier Téléchargements.
         """

@@ -79,16 +79,34 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Exporter en Excel (Mock/Utilitaire)
-  function exportToExcel(data, filename) {
+  async function exportToExcel(data) {
     if (data.length === 0) {
       alert("Aucune donnée à exporter.");
       return;
     }
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Résultats INPI");
-    XLSX.writeFile(wb, filename);
-    alert(`Exportation de ${data.length} résultats réussie!`);
+
+    fetch("http://127.0.0.1:5000/getExcel", {
+      method: "POST", // 'POST'
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => {
+        // Vérifie si la réponse est OK (statut 200-299)
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP! Statut: ${response.status}`);
+        }
+        // Tente de parser la réponse du serveur en JSON (si le serveur renvoie du JSON)
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Réponse du serveur (données reçues):", data);
+        alert("✅ Exportation terminée avec succès");
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la requête:", error);
+      });
   }
 
   singleTokenButton.addEventListener("click", () => refreshAuthToken("unique"));
@@ -97,7 +115,6 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   // --- Logique de la Recherche Unique ---
-
   searchButtonSingle.addEventListener("click", performSearchSingle);
   searchInput.addEventListener("keyup", (event) => {
     if (event.key === "Enter") {
@@ -106,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   singleExportButton.addEventListener("click", () => {
     // Utiliser les derniers résultats pour l'export
-    exportToExcel(lastSingleResults, "Recherche_Unique_INPI.xlsx");
+    exportToExcel(lastSingleResults);
   });
 
   async function performSearchSingle() {
@@ -135,13 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loaderSingle.classList.add("hidden");
 
       if (data && data.results && data.total_results > 0) {
-        lastSingleResults = data.results.map((c) => ({
-          Denomination: c.denomination,
-          SIREN: c.siren,
-          "Forme Juridique": c.formeJuridique || "N/A",
-          Adresse: formatAddress(c),
-          // Ajoutez ici d'autres champs que vous souhaitez exporter
-        }));
+        lastSingleResults = data.results;
         displayResultsSingle(data.results);
         singleExportButton.disabled = false;
       } else {
