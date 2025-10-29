@@ -88,6 +88,44 @@ class DataCleaning:
         df_principaux = pd.DataFrame(principaux_data)
         df_secondaires = pd.DataFrame(autres_etablissements_data)
 
+        df_principaux = df_principaux.loc[
+            :,
+            [
+                "siren",
+                "siret",
+                "denomination",
+                "formeJuridique",
+                "codeApe",
+                "nbAutresEtablissementsTrouves",
+                "numVoie",
+                "typeVoie",
+                "voie",
+                "commune",
+                "complementLocalisation",
+                "codePostal",
+                "pays",
+            ],
+        ]
+
+        df_secondaires = df_secondaires.loc[
+            :,
+            [
+                "siren",
+                "siret",
+                "enseigne",
+                "formeJuridique",
+                "codeApe",
+                "dateEffetFermeture",
+                "numVoie",
+                "typeVoie",
+                "voie",
+                "commune",
+                "complementLocalisation",
+                "codePostal",
+                "pays",
+            ],
+        ]
+
         if df_principaux.empty and df_secondaires.empty:
             print(
                 "❌ Échec de l'exportation : Aucun établissement valide n'a été trouvé après le traitement."

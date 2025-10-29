@@ -145,7 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
     lastSingleResults = [];
 
     try {
-      // Remplacer ceci par votre appel API réel
       const data = await mockApiCallSingle(query, searchType);
       console.log(data);
 
@@ -289,6 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
           alert("Aucune donnée d'entreprise valide trouvée dans le fichier.");
           return;
         }
+        console.log(companiesToSearch)
 
         // Affichage du statut
         fileNameDisplay.textContent = `Fichier traité : ${file.name}`;
@@ -333,22 +333,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const company = companiesToSearch[i];
 
       try {
-        // REMPLACER cet appel mock par votre appel backend réel qui gère la recherche
-        const data = await mockApiCallSingle(company.query, company.type);
+        const data = await mockApiCallSingle(parseFloat(company.query), company.type);
 
         if (data && data.results && data.results.length > 0) {
           foundCount++;
           // Ajouter le résultat à la liste pour l'export
-          multipleSearchResults.push({
-            "Recherche Type": company.type,
-            "Recherche Valeur": company.query,
-            Denomination: data.results[0].denomination,
-            SIREN: data.results[0].siren,
-            "Forme Juridique":
-              data.results[0].formality?.content?.personneMorale?.identite
-                ?.formeJuridique || "N/A",
-            Adresse: formatAddress(data.results[0]),
-          });
+          multipleSearchResults.push(data.results[0]);
         }
       } catch (error) {
         console.error(`Erreur de recherche pour ${company.query}:`, error);
@@ -360,7 +350,6 @@ document.addEventListener("DOMContentLoaded", () => {
       progressBar.style.width = `${progress}%`;
       companiesFoundDisplay.textContent = `${foundCount} entreprises trouvées`;
     }
-
     alert(`Recherche multiple terminée. ${foundCount} entreprises trouvées.`);
     multipleStartButton.disabled = false;
     multipleExportButton.disabled = foundCount === 0;
