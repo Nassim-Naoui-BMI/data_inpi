@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const noResultsSingle = document.getElementById("no-results-single");
   const singleExportButton = document.getElementById("single-export-button");
   const singleTokenButton = document.getElementById("single-token-button");
+  const singleTokenActif = document.getElementById("single-token-actif");
+  const singleTokenInactif = document.getElementById("single-token-inactif");
   let lastSingleResults = []; // Pour l'export
 
   // Recherche Multiple
@@ -28,12 +30,16 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   const progressBar = document.getElementById("progress-bar");
   const multipleStartButton = document.getElementById("multiple-start-button");
+  const multipleMissingtButton = document.getElementById(
+    "multiple-missing-export-button"
+  );
   const multipleExportButton = document.getElementById(
     "multiple-export-button"
   );
   const multipleTokenButton = document.getElementById("multiple-token-button");
   let companiesToSearch = [];
   let multipleSearchResults = [];
+  let multipleResultsMissing = [];
 
   // --- Logique de Navigation (Tabs) ---
   function switchTab(targetId) {
@@ -62,6 +68,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Fonctions d'Action Globales ---
 
   // Rafraîchir le Token (Mock)
+  // const isTokenActive = false;
+  // const lastRefresh = "";
+  // localStorage.setItem("Is Token active", isTokenActive);
+  // localStorage.setItem("Last Refresh", lastRefresh);
+
+  // function switchTokenStatus(tabType) {
+  //   if (tabType === "unique") {
+  //     singleTokenInactif.classList.add("hidden");
+  //     singleTokenActif.classList.remove("hidden");
+  //     localStorage.setItem("Is Token active", !isTokenActive);
+  //     localStorage.setItem("Last Refresh", Date.now());
+  //   }
+  // }
+
   function refreshAuthToken() {
     fetch("http://127.0.0.1:5000/token", {
       method: "GET",
@@ -107,6 +127,18 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch((error) => {
         console.error("Erreur lors de la requête:", error);
       });
+  }
+
+  function exportToExcelMissingElement(data, filename) {
+    if (data.length === 0) {
+      alert("Aucune donnée à exporter.");
+      return;
+    }
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Résultats Manquants INPI");
+    XLSX.writeFile(wb, filename);
+    alert(`Exportation de ${data.length} réussie!`);
   }
 
   singleTokenButton.addEventListener("click", () => refreshAuthToken("unique"));
@@ -259,7 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
           h.toUpperCase().includes("SIREN")
         );
         const nameIndex = headers.findIndex((h) =>
-          h.toUpperCase().includes("NOM")
+          h.toUpperCase().includes("NAME")
         );
 
         if (sirenIndex === -1 && nameIndex === -1) {
@@ -288,7 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
           alert("Aucune donnée d'entreprise valide trouvée dans le fichier.");
           return;
         }
-        console.log(companiesToSearch)
+        console.log(companiesToSearch);
 
         // Affichage du statut
         fileNameDisplay.textContent = `Fichier traité : ${file.name}`;
@@ -318,6 +350,12 @@ document.addEventListener("DOMContentLoaded", () => {
       "Recherche_Multiple_INPI_Resultats.xlsx"
     );
   });
+  multipleMissingtButton.addEventListener("click", () => {
+    exportToExcelMissingElement(
+      multipleResultsMissing,
+      "Liste_Des_Manquants.xlsx"
+    );
+  });
 
   async function performSearchMultiple() {
     if (companiesToSearch.length === 0) {
@@ -326,19 +364,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     multipleStartButton.disabled = true;
+    multipleMissingtButton.disabled = true;
+    multipleMissingtButton.classList.remove("cursor-pointer");
+    multipleMissingtButton.classList.add("cursor-not-allowed");
+    multipleExportButton.classList.remove("cursor-pointer");
+    multipleExportButton.classList.add("cursor-not-allowed");
     multipleSearchResults = [];
+    multipleResultsMissing = [];
     let foundCount = 0;
 
     for (let i = 0; i < companiesToSearch.length; i++) {
       const company = companiesToSearch[i];
 
       try {
-        const data = await mockApiCallSingle(parseFloat(company.query), company.type);
+        const data =
+          company.type === "SIREN"
+            ? await mockApiCallSingle(parseFloat(company.query), company.type)
+            : await mockApiCallSingle(company.query, company.type);
 
         if (data && data.results && data.results.length > 0) {
           foundCount++;
           // Ajouter le résultat à la liste pour l'export
           multipleSearchResults.push(data.results[0]);
+        } else if (data.results.length === 0) {
+          company.type === "SIREN"
+            ? multipleResultsMissing.push({
+                SIREN: company.query,
+              })
+            : multipleResultsMissing.push({
+                NAME: company.query,
+              });
+          console.log(`Missing result : ${company.query}`);
         }
       } catch (error) {
         console.error(`Erreur de recherche pour ${company.query}:`, error);
@@ -350,9 +406,18 @@ document.addEventListener("DOMContentLoaded", () => {
       progressBar.style.width = `${progress}%`;
       companiesFoundDisplay.textContent = `${foundCount} entreprises trouvées`;
     }
-    alert(`Recherche multiple terminée. ${foundCount} entreprises trouvées.`);
+    alert(
+      `Recherche multiple terminée. ${foundCount} entreprises trouvées sur ${companiesToSearch.length}.`
+    );
     multipleStartButton.disabled = false;
     multipleExportButton.disabled = foundCount === 0;
+    multipleExportButton.classList.remove("cursor-not-allowed");
+    multipleExportButton.classList.add("cursor-pointer");
+    if (foundCount < companiesToSearch.length) {
+      multipleMissingtButton.disabled = false;
+      multipleMissingtButton.classList.remove("cursor-not-allowed");
+      multipleMissingtButton.classList.add("cursor-pointer");
+    }
   }
 
   // --- Fonctions Mock (À remplacer par l'API backend) ---

@@ -109,7 +109,7 @@
           </label>
         </div>
 
-        <div class="flex justify-end gap-4 mb-6">
+        <div class="flex justify-end gap-4 mb-2">
           <button
             id="single-export-button"
             class="flex items-center bg-green-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300"
@@ -152,6 +152,20 @@
             Rafraîchir Token
           </button>
         </div>
+        <div id="single-token-actif" class="flex justify-end">
+          <div
+            class="bg-green-100 p-1 border rounded-lg border-green-400 text-green-400 text-xs hidden"
+          >
+            Token actif
+          </div>
+        </div>
+        <div id="single-token-inactif" class="flex justify-end">
+          <div
+            class="bg-red-100 p-1 border rounded-lg border-red-400 text-red-400 text-xs"
+          >
+            Token Inactif
+          </div>
+        </div>
 
         <div id="results-container-single">
           <div
@@ -187,27 +201,13 @@
           id="dropzone"
           class="dropzone p-10 text-center rounded-lg cursor-pointer mb-6"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="mx-auto h-10 w-10 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M7 16a4 4 0 01-.88-7.903A5 5 5 0115.9 6h1.1a2 2 0 012 2v1a4 4 0 01-4 4h-2m-4-4l-4 4-4-4m8 4V4"
-            />
-          </svg>
           <p class="mt-1 text-sm text-gray-600">
             <strong class="font-semibold">Glissez-déposez</strong> votre fichier
             Excel ici ou
             <span class="text-blue-600">cliquez pour sélectionner</span>.
           </p>
           <p class="text-xs text-gray-500 mt-1">
-            (Le fichier doit contenir une colonne "SIREN" ou "Nom" en première
+            (Le fichier doit contenir une colonne "SIREN" ou "NAME" en première
             ligne)
           </p>
           <input
@@ -253,8 +253,27 @@
         </div>
         <div class="flex justify-end gap-4 mt-6">
           <button
+            id="multiple-missing-export-button"
+            class="flex items-center cursor-not-allowed disabled bg-gray-500 disabled text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-600 transition duration-300"
+            disabled
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-2"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Exporter les manquants
+          </button>
+          <button
             id="multiple-export-button"
-            class="flex items-center bg-green-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300"
+            class="flex items-center cursor-not-allowed bg-green-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300"
             disabled
           >
             <svg
@@ -273,7 +292,7 @@
           </button>
           <button
             id="multiple-token-button"
-            class="flex items-center bg-yellow-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-yellow-600 transition duration-300"
+            class="flex items-center cursor-pointer bg-yellow-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-yellow-600 transition duration-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
