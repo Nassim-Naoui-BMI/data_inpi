@@ -91,17 +91,17 @@ document.addEventListener("DOMContentLoaded", () => {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("Token reçu :", data);
+        console.log("✅ Token reçu :", data);
       })
       .catch((error) => {
-        console.error("Erreur :", error);
+        console.error("❌ Erreur :", error);
       });
   }
 
   // Exporter en Excel (Mock/Utilitaire)
   async function exportToExcel(data) {
     if (data.length === 0) {
-      alert("Aucune donnée à exporter.");
+      alert("❌ Aucune donnée à exporter.");
       return;
     }
 
@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return response.json();
       })
       .then((data) => {
-        console.log("Réponse du serveur (données reçues):", data);
+        console.log("✅ Réponse du serveur (données reçues):", data);
         alert("✅ Exportation terminée avec succès");
       })
       .catch((error) => {
@@ -131,14 +131,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function exportToExcelMissingElement(data, filename) {
     if (data.length === 0) {
-      alert("Aucune donnée à exporter.");
+      alert("❌ Aucune donnée à exporter.");
       return;
     }
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Résultats Manquants INPI");
     XLSX.writeFile(wb, filename);
-    alert(`Exportation de ${data.length} réussie!`);
+    alert(`✅ Exportation de ${data.length} réussies!`);
   }
 
   singleTokenButton.addEventListener("click", () => refreshAuthToken("unique"));
@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ).value;
 
     if (!query) {
-      alert("Veuillez entrer un terme de recherche.");
+      alert("⚠️ Veuillez entrer un terme de recherche.");
       return;
     }
 
@@ -270,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 2. Traitement du fichier Excel
   function processFile(file) {
     if (!file.name.match(/\.(xlsx|xls)$/)) {
-      alert("Veuillez déposer un fichier Excel (.xlsx ou .xls).");
+      alert("⚠️ Veuillez déposer un fichier Excel (.xlsx ou .xls).");
       return;
     }
 
@@ -296,7 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (sirenIndex === -1 && nameIndex === -1) {
           alert(
-            "Le fichier doit contenir une colonne nommée 'SIREN' ou 'Nom'."
+            "⚠️ Le fichier doit contenir une colonne nommée 'SIREN' ou 'NAME'."
           );
           return;
         }
@@ -317,7 +317,9 @@ document.addEventListener("DOMContentLoaded", () => {
           .filter((item) => item !== null);
 
         if (companiesToSearch.length === 0) {
-          alert("Aucune donnée d'entreprise valide trouvée dans le fichier.");
+          alert(
+            "❌ Aucune donnée d'entreprise valide trouvée dans le fichier."
+          );
           return;
         }
         console.log(companiesToSearch);
@@ -333,9 +335,9 @@ document.addEventListener("DOMContentLoaded", () => {
         multipleExportButton.disabled = true; // Désactiver l'export tant qu'aucune recherche n'est faite
         multipleSearchResults = []; // Réinitialiser les résultats
       } catch (error) {
-        console.error("Erreur de lecture du fichier Excel:", error);
+        console.error("❌ Erreur de lecture du fichier Excel:", error);
         alert(
-          "Erreur lors de la lecture du fichier. Assurez-vous qu'il est bien formaté."
+          "❌ Erreur lors de la lecture du fichier. Assurez-vous qu'il est bien formaté."
         );
       }
     };
@@ -359,7 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function performSearchMultiple() {
     if (companiesToSearch.length === 0) {
-      alert("Veuillez d'abord charger un fichier avec des entreprises.");
+      alert("⚠️ Veuillez d'abord charger un fichier avec des entreprises.");
       return;
     }
 
@@ -394,10 +396,10 @@ document.addEventListener("DOMContentLoaded", () => {
             : multipleResultsMissing.push({
                 NAME: company.query,
               });
-          console.log(`Missing result : ${company.query}`);
+          console.log(`⚠️ Missing result : ${company.query}`);
         }
       } catch (error) {
-        console.error(`Erreur de recherche pour ${company.query}:`, error);
+        console.error(`❌ Erreur de recherche pour ${company.query}:`, error);
         // Logique pour gérer les erreurs pour une entreprise spécifique si nécessaire
       }
 
@@ -407,7 +409,7 @@ document.addEventListener("DOMContentLoaded", () => {
       companiesFoundDisplay.textContent = `${foundCount} entreprises trouvées`;
     }
     alert(
-      `Recherche multiple terminée. ${foundCount} entreprises trouvées sur ${companiesToSearch.length}.`
+      `✅ Recherche multiple terminées. ${foundCount} entreprises trouvées sur ${companiesToSearch.length}.`
     );
     multipleStartButton.disabled = false;
     multipleExportButton.disabled = foundCount === 0;
@@ -423,7 +425,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Fonctions Mock (À remplacer par l'API backend) ---
 
   async function mockApiCallSingle(query, type) {
-    console.log(`Mock searching for "${query}" by "${type}"`);
+    console.log(`⏳ Mock searching for "${query}" by "${type}"`);
 
     // 1. Simuler délai réseau
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -449,7 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // 3. Utiliser await pour attendre la conversion JSON
       const data = await response.json();
 
-      console.log(`API Call accepted for : ${query}`);
+      console.log(`✅ API Call accepted for : ${query}`);
 
       // 4. La fonction async renvoie cette valeur (elle sera la valeur de la promesse résolue)
       if (type === "siren") {
@@ -465,7 +467,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       // 5. Gérer les erreurs réseau ou HTTP
-      console.error("Erreur lors de l'appel API :", error.message);
+      console.error("❌ Erreur lors de l'appel API :", error.message);
       // Retourner un résultat vide en cas d'échec
       return { total_results: 0, results: [] };
     }
