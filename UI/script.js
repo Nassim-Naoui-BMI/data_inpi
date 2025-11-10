@@ -37,11 +37,19 @@ document.addEventListener("DOMContentLoaded", () => {
     "multiple-export-button"
   );
   const multipleTokenButton = document.getElementById("multiple-token-button");
+  const multipleTokenActif = document.getElementById("multiple-token-actif");
+  const multipleTokenInactif = document.getElementById(
+    "multiple-token-inactif"
+  );
   let companiesToSearch = [];
   let multipleSearchResults = [];
   let multipleResultsMissing = [];
 
   // --- Logique de Navigation (Tabs) ---
+  let currentSection = "section-single";
+  let isSingleSectionActive =
+    currentSection === "section-single" ? true : false;
+
   function switchTab(targetId) {
     tabSections.forEach((section) => {
       section.classList.add("hidden");
@@ -59,28 +67,81 @@ document.addEventListener("DOMContentLoaded", () => {
   tabButtons.forEach((button) => {
     button.addEventListener("click", (e) => {
       switchTab(e.currentTarget.dataset.target);
+      currentSection = e.currentTarget.dataset.target;
+      isSingleSectionActive =
+        currentSection === "section-single" ? true : false;
+      switchTokenStatus(isSingleSectionActive);
     });
   });
 
   // Initialisation: afficher la première section par défaut
-  switchTab("section-single");
+  switchTab(currentSection);
 
   // --- Fonctions d'Action Globales ---
 
-  // Rafraîchir le Token (Mock)
-  // const isTokenActive = false;
-  // const lastRefresh = "";
-  // localStorage.setItem("Is Token active", isTokenActive);
-  // localStorage.setItem("Last Refresh", lastRefresh);
+  // Chargement du statut du token
 
-  // function switchTokenStatus(tabType) {
-  //   if (tabType === "unique") {
-  //     singleTokenInactif.classList.add("hidden");
-  //     singleTokenActif.classList.remove("hidden");
-  //     localStorage.setItem("Is Token active", !isTokenActive);
-  //     localStorage.setItem("Last Refresh", Date.now());
-  //   }
-  // }
+  const TOKEN_STATUS_KEY = "isTokenActive";
+  const LAST_REFRESH_KEY = "lastRefresh";
+  const EXPIRATION_HOURS = 1;
+
+  const isTokenActive = loadTokenStatusLocalStorage();
+  console.log(isTokenActive);
+
+  function saveTokenStatusLocalStorage(status) {
+    localStorage.setItem(TOKEN_STATUS_KEY, String(status));
+    const refreshDate = Date.now();
+    const date = new Date(refreshDate);
+    localStorage.setItem(LAST_REFRESH_KEY, refreshDate);
+    localStorage.setItem("date", date.toUTCString());
+  }
+
+  function loadTokenStatusLocalStorage() {
+    const statusString = localStorage.getItem(TOKEN_STATUS_KEY);
+    const lastRefreshString = localStorage.getItem(LAST_REFRESH_KEY);
+
+    if (statusString === null || lastRefreshString === null) {
+      saveTokenStatusLocalStorage(false);
+      return false;
+    }
+
+    const isTokenActive = statusString === "true";
+    const lastRefreshTime = Number(lastRefreshString);
+    const date = new Date(lastRefreshTime);
+    console.log(date.toUTCString());
+
+    if (!isTokenActive || isNaN(lastRefreshTime)) {
+      return false;
+    }
+
+    const expirationLimitMs = EXPIRATION_HOURS * 60 * 60 * 1000;
+    const isExpired = Date.now() - lastRefreshTime >= expirationLimitMs;
+
+    if (isExpired) {
+      saveTokenStatusLocalStorage(false);
+      return false;
+    }
+
+    return true;
+  }
+
+  function switchTokenStatus(section) {
+    if (section) {
+      isTokenActive
+        ? (singleTokenInactif.classList.add("hidden"),
+          singleTokenActif.classList.remove("hidden"))
+        : (singleTokenActif.classList.add("hidden"),
+          singleTokenInactif.classList.remove("hidden"));
+    } else {
+      isTokenActive
+        ? (multipleTokenInactif.classList.add("hidden"),
+          multipleTokenActif.classList.remove("hidden"))
+        : (multipleTokenActif.classList.add("hidden"),
+          multipleTokenInactif.classList.remove("hidden"));
+    }
+  }
+
+  switchTokenStatus(isSingleSectionActive);
 
   function refreshAuthToken() {
     fetch("http://127.0.0.1:5000/token", {
@@ -92,9 +153,11 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((response) => response.json())
       .then((data) => {
         console.log("✅ Token reçu :", data);
+        saveTokenStatusLocalStorage(true);
       })
       .catch((error) => {
         console.error("❌ Erreur :", error);
+        saveTokenStatusLocalStorage(false);
       });
   }
 
@@ -367,10 +430,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     multipleStartButton.disabled = true;
     multipleMissingtButton.disabled = true;
-    multipleMissingtButton.classList.remove("cursor-pointer");
-    multipleMissingtButton.classList.add("cursor-not-allowed");
-    multipleExportButton.classList.remove("cursor-pointer");
-    multipleExportButton.classList.add("cursor-not-allowed");
     multipleSearchResults = [];
     multipleResultsMissing = [];
     let foundCount = 0;
@@ -380,7 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         const data =
-          company.type === "SIREN"
+          company.type === "siren"
             ? await mockApiCallSingle(parseFloat(company.query), company.type)
             : await mockApiCallSingle(company.query, company.type);
 
@@ -389,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // Ajouter le résultat à la liste pour l'export
           multipleSearchResults.push(data.results[0]);
         } else if (data.results.length === 0) {
-          company.type === "SIREN"
+          company.type === "siren"
             ? multipleResultsMissing.push({
                 SIREN: company.query,
               })
@@ -413,12 +472,8 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     multipleStartButton.disabled = false;
     multipleExportButton.disabled = foundCount === 0;
-    multipleExportButton.classList.remove("cursor-not-allowed");
-    multipleExportButton.classList.add("cursor-pointer");
     if (foundCount < companiesToSearch.length) {
       multipleMissingtButton.disabled = false;
-      multipleMissingtButton.classList.remove("cursor-not-allowed");
-      multipleMissingtButton.classList.add("cursor-pointer");
     }
   }
 
