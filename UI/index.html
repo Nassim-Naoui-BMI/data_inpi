@@ -44,7 +44,11 @@
   <body class="bg-gray-100 min-h-screen flex items-center justify-center py-10">
     <div class="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-8">
       <div class="flex flex-row">
-        <img src="./asset/BMI Logo.png" alt="logo-bmi" class="h-[48px]" />
+        <img
+          src="{{ url_for('static', filename='./asset/BMI Logo.png') }}"
+          alt="logo-bmi"
+          class="h-[48px]"
+        />
         <div class="text-center mb-8 ml-auto mr-auto">
           <h1 class="text-3xl font-bold text-gray-800">
             Recherche d'entreprise INPI 🇫🇷
@@ -52,6 +56,20 @@
           <p class="text-gray-500 mt-2">
             Recherchez des données d'entreprise via l'API INPI.
           </p>
+        </div>
+        <div class="flex flex-col gap-2 relative">
+          <div
+            id="shutdown-server-button"
+            class="self-end rounded-full bg-gray-400 h-[24px] w-[24px] mb-2 text-center text-white cursor-pointer hover:bg-red-400"
+          >
+            X
+          </div>
+          <div
+            id="tool-tip-shutdown"
+            class="absolute border border-gray-800 bg-gray-800 p-2 rounded-lg text-white text-sm top-10 w-fit text-nowrap hidden"
+          >
+            Fermer le serveur
+          </div>
         </div>
       </div>
 
@@ -155,14 +173,14 @@
             Rafraîchir Token
           </button>
         </div>
-        <div id="single-token-actif" class="flex justify-end hidden">
+        <div id="single-token-actif" class="flex justify-end mb-2 hidden">
           <div
             class="bg-green-100 p-1 border rounded-lg border-green-400 text-green-400 text-xs"
           >
             Token actif
           </div>
         </div>
-        <div id="single-token-inactif" class="flex justify-end">
+        <div id="single-token-inactif" class="flex justify-end mb-2">
           <div
             class="bg-red-100 p-1 border rounded-lg border-red-400 text-red-400 text-xs"
           >
@@ -317,14 +335,14 @@
             Rafraîchir Token
           </button>
         </div>
-        <div id="multiple-token-actif" class="flex justify-end hidden">
+        <div id="multiple-token-actif" class="flex justify-end hidden mb-2">
           <div
             class="bg-green-100 p-1 border rounded-lg border-green-400 text-green-400 text-xs"
           >
             Token actif
           </div>
         </div>
-        <div id="multiple-token-inactif" class="flex justify-end">
+        <div id="multiple-token-inactif" class="flex justify-end mb-2">
           <div
             class="bg-red-100 p-1 border rounded-lg border-red-400 text-red-400 text-xs"
           >
@@ -334,6 +352,7 @@
       </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- <script src="script.js"></script> -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
   </body>
 </html>

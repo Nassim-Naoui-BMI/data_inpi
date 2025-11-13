@@ -1,4 +1,6 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, render_template
+import os
+import signal
 
 from .config import Config
 from .api import ApiRequest
@@ -8,6 +10,13 @@ from .user import UserMangement
 
 
 bp = Blueprint("routes", __name__)
+
+@bp.route("/")
+def index():
+    """ Sert la page d'accueil (index.html) de l'application. """
+    # Flask cherchera 'index.html' dans le dossier que nous avons 
+    # défini comme 'template_folder' (c'est-à-dire le dossier 'UI')
+    return render_template("index.html")
 
 
 @bp.route("/ping")
@@ -20,7 +29,9 @@ def debug_config():
 
     return {
         "auth_url": Config.auth_url,
+        "api_url": Config.api_url,
         "username": Config.username,
+        "password": Config.password
     }
 
 
@@ -105,3 +116,18 @@ def edit_excel():
     cleaner.export_etablissements_to_excel(data_pour_export, path)
 
     return {"message": "Export Excel démarré avec succès."}, 200
+
+@bp.route("/shutdown", methods=['POST'])
+def shutdown_server():
+    # Sécurité : N'accepter que les requêtes venant de la machine locale
+    if request.remote_addr != '127.0.0.1':
+        return jsonify({"error": "Non autorisé"}), 403 
+
+    print("Arrêt du serveur demandé...")
+    
+    # Envoyer le signal de terminaison au processus serveur actuel
+    try:
+        os.kill(os.getpid(), signal.SIGTERM)
+        return jsonify({"message": "Serveur en cours d'arrêt..."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

@@ -4,6 +4,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabButtons = document.querySelectorAll(".tab-button");
   const tabSections = document.querySelectorAll(".tab-section");
 
+  // Shutdown server
+  const shutDownButton = document.getElementById("shutdown-server-button");
+  const toolTipShutdown = document.getElementById("tool-tip-shutdown");
+
+  shutDownButton.addEventListener("click", () => {
+    shutDownServer();
+  });
+
+  shutDownButton.addEventListener("mouseover", () => {
+    toolTipShutdown.classList.remove("hidden");
+  });
+
+  shutDownButton.addEventListener("mouseout", () => {
+    toolTipShutdown.classList.add("hidden");
+  });
+
   // Recherche Unique
   const searchButtonSingle = document.getElementById("search-button");
   const searchInput = document.getElementById("search-input");
@@ -85,9 +101,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const LAST_REFRESH_KEY = "lastRefresh";
   const EXPIRATION_HOURS = 1;
 
-  const isTokenActive = loadTokenStatusLocalStorage();
-  console.log(isTokenActive);
-
   function saveTokenStatusLocalStorage(status) {
     localStorage.setItem(TOKEN_STATUS_KEY, String(status));
     const refreshDate = Date.now();
@@ -107,8 +120,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const isTokenActive = statusString === "true";
     const lastRefreshTime = Number(lastRefreshString);
-    const date = new Date(lastRefreshTime);
-    console.log(date.toUTCString());
 
     if (!isTokenActive || isNaN(lastRefreshTime)) {
       return false;
@@ -126,14 +137,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function switchTokenStatus(section) {
+    const currentTokenStatus = loadTokenStatusLocalStorage();
+
     if (section) {
-      isTokenActive
+      currentTokenStatus
         ? (singleTokenInactif.classList.add("hidden"),
           singleTokenActif.classList.remove("hidden"))
         : (singleTokenActif.classList.add("hidden"),
           singleTokenInactif.classList.remove("hidden"));
     } else {
-      isTokenActive
+      currentTokenStatus
         ? (multipleTokenInactif.classList.add("hidden"),
           multipleTokenActif.classList.remove("hidden"))
         : (multipleTokenActif.classList.add("hidden"),
@@ -154,10 +167,12 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((data) => {
         console.log("✅ Token reçu :", data);
         saveTokenStatusLocalStorage(true);
+        switchTokenStatus(isSingleSectionActive);
       })
       .catch((error) => {
         console.error("❌ Erreur :", error);
         saveTokenStatusLocalStorage(false);
+        switchTokenStatus(isSingleSectionActive);
       });
   }
 
@@ -204,9 +219,15 @@ document.addEventListener("DOMContentLoaded", () => {
     alert(`✅ Exportation de ${data.length} réussies!`);
   }
 
-  singleTokenButton.addEventListener("click", () => refreshAuthToken("unique"));
-  multipleTokenButton.addEventListener("click", () =>
-    refreshAuthToken("multiple")
+  singleTokenButton.addEventListener(
+    "click",
+    () => refreshAuthToken("unique"),
+    switchTokenStatus(isSingleSectionActive)
+  );
+  multipleTokenButton.addEventListener(
+    "click",
+    () => refreshAuthToken("multiple"),
+    switchTokenStatus(isSingleSectionActive)
   );
 
   // --- Logique de la Recherche Unique ---
@@ -241,7 +262,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const data = await mockApiCallSingle(query, searchType);
-      console.log(data);
 
       loaderSingle.classList.add("hidden");
 
@@ -527,4 +547,25 @@ document.addEventListener("DOMContentLoaded", () => {
       return { total_results: 0, results: [] };
     }
   }
+
+  // A lier à un bouton "Quitter l'application"
+  function shutDownServer() {
+    confirm("Êtes-vous sûr de voiloir fermer le serveur ?");
+
+    console.log("Envoi de l'ordre d'arrêt au serveur...");
+
+    fetch("http://127.0.0.1:5000/shutdown", {
+      method: "POST",
+    }).catch((error) => {
+      console.warn("Connexion au serveur perdue (arrêt normal).");
+    });
+
+    // setTimeout(() => {
+    //   window.close();
+    // }, 500);
+  }
+});
+
+window.addEventListener("beforeunload", (event) => {
+  navigator.sendBeacon("http://127.0.0.1:5000/shutdown");
 });

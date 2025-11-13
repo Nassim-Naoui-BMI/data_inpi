@@ -16,7 +16,8 @@ dependencies = [
     "openpyxl (>=3.1.5,<4.0.0)",
     "flask (>=3.1.2,<4.0.0)",
     "dotenv (>=0.9.9,<0.10.0)",
-    "flask-cors (>=6.0.1,<7.0.0)"
+    "flask-cors (>=6.0.1,<7.0.0)",
+    "waitress (>=3.0.2,<4.0.0)"
 ]
 
 [tool.poetry]
@@ -25,6 +26,8 @@ packages = [{include = "data_inpi", from = "src"}]
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
+
+pyinstaller = {version = "^6.16.0", python = "<3.15"}
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

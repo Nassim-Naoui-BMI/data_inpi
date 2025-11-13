@@ -35,3 +35,7 @@ samse_draft.json
 draft.json
 rapport_final_etablissements.xlsx
 data_import
+
+#build et dist
+/build
+/dist
