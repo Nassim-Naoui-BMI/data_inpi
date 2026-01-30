@@ -1,5 +1,6 @@
 import os
 
+
 class Config:
     DEBUG = True
     auth_url = "https://registre-national-entreprises.inpi.fr/api/sso/login"

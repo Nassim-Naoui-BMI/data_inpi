@@ -172,7 +172,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch((error) => {
         console.error("❌ Erreur :", error);
         saveTokenStatusLocalStorage(false);
-        switchTokenStatus(isSingleSectionActive);
       });
   }
 
@@ -216,7 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Résultats Manquants INPI");
     XLSX.writeFile(wb, filename);
-    alert(`✅ Exportation de ${data.length} réussies!`);
+    alert(`✅ Exportation de ${data.length} compte(s) réussie!`);
   }
 
   singleTokenButton.addEventListener(
@@ -550,7 +549,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // A lier à un bouton "Quitter l'application"
   function shutDownServer() {
-    confirm("Êtes-vous sûr de voiloir fermer le serveur ?");
+    confirm("Êtes-vous sûr de vouloir fermer le serveur ?");
 
     console.log("Envoi de l'ordre d'arrêt au serveur...");
 

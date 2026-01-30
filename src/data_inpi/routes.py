@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app, render_template
 import os
 import signal
+import logging
 
 from .config import Config
 from .api import ApiRequest
@@ -11,10 +12,11 @@ from .user import UserMangement
 
 bp = Blueprint("routes", __name__)
 
+
 @bp.route("/")
 def index():
-    """ Sert la page d'accueil (index.html) de l'application. """
-    # Flask cherchera 'index.html' dans le dossier que nous avons 
+    """Sert la page d'accueil (index.html) de l'application."""
+    # Flask cherchera 'index.html' dans le dossier que nous avons
     # défini comme 'template_folder' (c'est-à-dire le dossier 'UI')
     return render_template("index.html")
 
@@ -31,23 +33,39 @@ def debug_config():
         "auth_url": Config.auth_url,
         "api_url": Config.api_url,
         "username": Config.username,
-        "password": Config.password
+        "password": Config.password,
     }
 
 
 @bp.route("/token", methods=["GET"])
 def get_token():
 
-    api = ApiRequest(
-        auth_url=Config.auth_url,
-        api_url=Config.api_url,
-        username=Config.username,
-        password=Config.password,
-    )
+    try:
+        api = ApiRequest(
+            auth_url=Config.auth_url,
+            api_url=Config.api_url,
+            username=Config.username,
+            password=Config.password,
+        )
 
-    token = api.get_access_token()
+        token = api.get_access_token()
 
-    return jsonify({"status access_token": "ok"})
+        # Si tout va bien, on renvoie le succès
+        return jsonify({"status_access_token": "ok"})
+
+    except Exception as e:
+        # SI QUELQUE CHOSE PLANTE (ex: SSLError)
+        # On logue l'erreur complète dans la console du serveur
+        logging.error(
+            f"Erreur critique lors de la récupération du token: {e}", exc_info=True
+        )
+
+        # On renvoie un JSON d'erreur clair au frontend
+        # Le 'str(e)' contiendra la VRAIE erreur (ex: "SSLError: ...")
+        return (
+            jsonify({"error": "Échec de la récupération du token", "details": str(e)}),
+            500,
+        )
 
 
 @bp.route("/inpi/siren/<siren>", methods=["GET"])
@@ -117,14 +135,15 @@ def edit_excel():
 
     return {"message": "Export Excel démarré avec succès."}, 200
 
-@bp.route("/shutdown", methods=['POST'])
+
+@bp.route("/shutdown", methods=["POST"])
 def shutdown_server():
     # Sécurité : N'accepter que les requêtes venant de la machine locale
-    if request.remote_addr != '127.0.0.1':
-        return jsonify({"error": "Non autorisé"}), 403 
+    if request.remote_addr != "127.0.0.1":
+        return jsonify({"error": "Non autorisé"}), 403
 
     print("Arrêt du serveur demandé...")
-    
+
     # Envoyer le signal de terminaison au processus serveur actuel
     try:
         os.kill(os.getpid(), signal.SIGTERM)
