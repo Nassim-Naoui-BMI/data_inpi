@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import List, Dict, Any
+from pathlib import Path
 import os
-import json
 
 
 class DataCleaning:
@@ -51,7 +51,8 @@ class DataCleaning:
         self,
         data_entreprises: List[Dict[str, Any]],
         directory,
-        file_name: str = "export_etablissements.xlsx",
+        file_name: str = "export_etablissements",
+        suffix: str = ".xlsx",
         principaux_sheet: str = "Etablissements_Principaux",
         secondaires_sheet: str = "Autres_Etablissements",
     ) -> None:
@@ -130,10 +131,10 @@ class DataCleaning:
             )
             return
 
+        final_path = self.check_existing_file(directory, file_name, suffix)
+
         try:
-            with pd.ExcelWriter(
-                directory + "/" + file_name, engine="openpyxl"
-            ) as writer:
+            with pd.ExcelWriter(final_path, engine="openpyxl") as writer:
                 df_principaux.to_excel(writer, sheet_name=principaux_sheet, index=False)
                 df_secondaires.to_excel(
                     writer, sheet_name=secondaires_sheet, index=False
@@ -143,3 +144,16 @@ class DataCleaning:
 
         except Exception as e:
             print(f"❌ Erreur critique lors de l'export Excel : {e}")
+
+    def check_existing_file(self, directory, file_name, suffix):
+        base_dir = Path(directory)
+
+        base_path = base_dir / file_name
+        final_path = base_path.with_suffix(suffix)
+
+        counter = 1
+        while final_path.exists():
+            final_path = base_dir / f"{file_name} ({counter}){suffix}"
+            counter += 1
+
+        return str(final_path)
