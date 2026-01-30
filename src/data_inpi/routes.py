@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app, render_template
+import requests
 import os
 import signal
 import logging
@@ -54,14 +55,12 @@ def get_token():
         return jsonify({"status_access_token": "ok"})
 
     except Exception as e:
-        # SI QUELQUE CHOSE PLANTE (ex: SSLError)
         # On logue l'erreur complète dans la console du serveur
         logging.error(
             f"Erreur critique lors de la récupération du token: {e}", exc_info=True
         )
 
         # On renvoie un JSON d'erreur clair au frontend
-        # Le 'str(e)' contiendra la VRAIE erreur (ex: "SSLError: ...")
         return (
             jsonify({"error": "Échec de la récupération du token", "details": str(e)}),
             500,
@@ -78,14 +77,26 @@ def get_inpi_data_by_siren(siren: str):
         password=Config.password,
     )
 
-    token = api.get_access_token()
+    try:
+        token = api.get_access_token()
 
-    data = api.search_company_by_siren(access_token=token, siren=siren)
+        data = api.search_company_by_siren(access_token=token, siren=siren)
 
-    cleaner = JsonHandler()
-    cleanedData = cleaner.flatten_json_siren(data)
+        cleaner = JsonHandler()
+        cleanedData = cleaner.flatten_json_siren(data)
 
-    return cleanedData
+        return cleanedData, 200
+
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code
+        if status_code == 429:
+            return jsonify(
+                {"status": "error", "message": f"Erreur API RNE : {status_code}"},
+                status_code,
+            )
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}, 500)
 
 
 @bp.route("/inpi/name/<companyName>", methods=["GET"])
@@ -98,21 +109,33 @@ def get_inpi_data_by_name(companyName: str):
         password=Config.password,
     )
 
-    token = api.get_access_token()
+    try:
+        token = api.get_access_token()
 
-    list_company = []
-    data = api.search_company_by_name(access_token=token, company_name=companyName)
+        list_company = []
+        data = api.search_company_by_name(access_token=token, company_name=companyName)
 
-    cleaner = JsonHandler()
+        cleaner = JsonHandler()
 
-    for i in range(0, len(data)):
-        try:
-            company_data_clean = cleaner.flatten_json_company_name(data, i)
-            list_company.append(company_data_clean)
-        except (KeyError, IndexError) as e:
-            print(f"Erreur de traitement pour (index {i}): {e}")
+        for i in range(0, len(data)):
+            try:
+                company_data_clean = cleaner.flatten_json_company_name(data, i)
+                list_company.append(company_data_clean)
+            except (KeyError, IndexError) as e:
+                print(f"Erreur de traitement pour (index {i}): {e}")
 
-    return list_company
+        return list_company, 200
+
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code
+        if status_code == 429:
+            return jsonify(
+                {"status": "error", "message": f"Erreur API RNE : {status_code}"},
+                status_code,
+            )
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}, 500)
 
 
 @bp.route("/getExcel", methods=["POST"])

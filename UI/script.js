@@ -516,7 +516,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // Gérer les erreurs HTTP (404, 500, etc.)
       if (!response.ok) {
         // Créer une erreur personnalisée avec le statut
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 429) {
+          alert("🟠 Le quota de requêtes journalier a été dépassé. Réessayez dans 24H ⏳")
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
       }
 
       // 3. Utiliser await pour attendre la conversion JSON

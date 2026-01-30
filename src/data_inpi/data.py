@@ -15,9 +15,6 @@ class DataCleaning:
             file_type (str): Le type de fichier ('csv', 'excel', 'json', etc.).
             export_path (str): Le chemin du dossier où exporter le fichier.
         """
-        # self.file_path = self.file_path
-        # self.file_type = self.file_type
-        # self.df = self.read_file()
 
     def read_file(self):
         """
@@ -31,6 +28,8 @@ class DataCleaning:
         else:
             raise ValueError(f"Type de fichier non supporté : {self.file_type}")
 
+    # -----------------------------------------------------------------------------------
+
     def drop_na(self, axis=0, how="any"):
         """
         Supprime les valeurs manquantes (NaN) du DataFrame.
@@ -43,6 +42,7 @@ class DataCleaning:
     def get_name_siren_arrays():
         """
         stock les noms d'entreprise et les siren dans arrays distincts.
+
         """
 
     # -----------------------------------------------------------------------------------
@@ -145,7 +145,14 @@ class DataCleaning:
         except Exception as e:
             print(f"❌ Erreur critique lors de l'export Excel : {e}")
 
+    # -----------------------------------------------------------------------------------
+
     def check_existing_file(self, directory, file_name, suffix):
+        """
+        Vérifie si le fichier existe déjà, auquel cas il incrémente un compteur dans le nom du fichier.
+
+        """
+
         base_dir = Path(directory)
 
         base_path = base_dir / file_name

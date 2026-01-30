@@ -42,6 +42,8 @@ class ApiRequest:
         self.password = password
         self.access_token = self._load_token()
 
+    # --------------------------------------------------------------------------------------------------------
+
     def _load_token(self):
         """
         Charge un jeton d'accès depuis le chemin absolu TOKEN_FILE_PATH.
@@ -81,6 +83,8 @@ class ApiRequest:
                 "L'application continuera, mais le token ne sera pas persisté."
             )
 
+    # --------------------------------------------------------------------------------------------------------
+
     def _get_expiration_time(self):
         """
         Méthode utilitaire pour obtenir le temps d'expiration du token.
@@ -92,6 +96,8 @@ class ApiRequest:
                 return token_data.get("expires_at", 0)
         except (FileNotFoundError, json.JSONDecodeError):
             return 0
+
+    # --------------------------------------------------------------------------------------------------------
 
     def get_access_token(self):
         """
@@ -136,6 +142,8 @@ class ApiRequest:
             logging.error(f"Erreur inattendue (get_access_token): {e}")
             raise e
 
+    # --------------------------------------------------------------------------------------------------------
+
     def search_company_by_name(self, access_token, company_name):
         """
         Recherche une entreprise dans l'API RNE en utilisant le jeton d'accès.
@@ -167,6 +175,8 @@ class ApiRequest:
         except Exception as e:
             logging.error(f"Erreur inattendue (search_company_by_name): {e}")
             raise e
+
+    # --------------------------------------------------------------------------------------------------------
 
     def search_company_by_siren(self, access_token, siren: str):
         """
