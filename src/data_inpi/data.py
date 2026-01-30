@@ -88,43 +88,41 @@ class DataCleaning:
         df_principaux = pd.DataFrame(principaux_data)
         df_secondaires = pd.DataFrame(autres_etablissements_data)
 
-        df_principaux = df_principaux.loc[
-            :,
-            [
-                "siren",
-                "siret",
-                "denomination",
-                "formeJuridique",
-                "codeApe",
-                "nbAutresEtablissementsTrouves",
-                "numVoie",
-                "typeVoie",
-                "voie",
-                "commune",
-                "complementLocalisation",
-                "codePostal",
-                "pays",
-            ],
+        # --- LISTE DES COLONNES SOUHAITÉES ---
+        cols_principaux = [
+            "siren",
+            "siret",
+            "denomination",
+            "formeJuridique",
+            "codeApe",
+            "nbAutresEtablissementsTrouves",
+            "numVoie",
+            "typeVoie",
+            "voie",
+            "commune",
+            "complementLocalisation",
+            "codePostal",
+            "pays",
         ]
 
-        df_secondaires = df_secondaires.loc[
-            :,
-            [
-                "siren",
-                "siret",
-                "enseigne",
-                "formeJuridique",
-                "codeApe",
-                "dateEffetFermeture",
-                "numVoie",
-                "typeVoie",
-                "voie",
-                "commune",
-                "complementLocalisation",
-                "codePostal",
-                "pays",
-            ],
+        cols_secondaires = [
+            "siren",
+            "siret",
+            "enseigne",
+            "formeJuridique",
+            "codeApe",
+            "dateEffetFermeture",
+            "numVoie",
+            "typeVoie",
+            "voie",
+            "commune",
+            "complementLocalisation",
+            "codePostal",
+            "pays",
         ]
+
+        df_principaux = df_principaux.reindex(columns=cols_principaux)
+        df_secondaires = df_secondaires.reindex(columns=cols_secondaires)
 
         if df_principaux.empty and df_secondaires.empty:
             print(

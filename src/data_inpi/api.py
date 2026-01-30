@@ -168,7 +168,7 @@ class ApiRequest:
             logging.error(f"Erreur inattendue (search_company_by_name): {e}")
             raise e
 
-    def search_company_by_siren(self, access_token, siren):
+    def search_company_by_siren(self, access_token, siren: str):
         """
         Recherche une entreprise dans l'API RNE en utilisant le jeton d'accès.
         """

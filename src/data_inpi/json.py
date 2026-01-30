@@ -11,8 +11,8 @@ class JsonHandler:
             data = json.load(f)
             return data
 
-    def print_json(self):
-        print(f"Clean object : ${json.dumps(self, indent=2)}")
+    def print_json(self, file):
+        print(f"Clean object : ${json.dumps(file, indent=2)}")
 
     def flatten_json_company_name(self, data, index):
 
@@ -22,8 +22,8 @@ class JsonHandler:
 
         if morale_obj:
             denomination = morale_obj["identite"]["entreprise"]["denomination"]
-            siren = morale_obj["identite"]["entreprise"]["siren"]
-            nicSiege = morale_obj["identite"]["entreprise"]["nicSiege"]
+            siren = str(morale_obj["identite"]["entreprise"]["siren"])
+            nicSiege = str(morale_obj["identite"]["entreprise"]["nicSiege"])
             codeApe = morale_obj["identite"]["entreprise"]["codeApe"]
             formeJuridique = morale_obj["identite"]["entreprise"]["formeJuridique"]
             pays = morale_obj["adresseEntreprise"]["adresse"]["pays"]
@@ -89,8 +89,8 @@ class JsonHandler:
             ]["prenoms"]
             prenom = ",".join(prenom_list)
             denomination = nom + " " + prenom
-            siren = physique_obj["identite"]["entreprise"]["siren"]
-            nicSiege = physique_obj["identite"]["entreprise"]["nicSiege"]
+            siren = str(physique_obj["identite"]["entreprise"]["siren"])
+            nicSiege = str(physique_obj["identite"]["entreprise"]["nicSiege"])
             codeApe = physique_obj["identite"]["entreprise"]["codeApe"]
             formeJuridique = physique_obj["identite"]["entreprise"].get(
                 "formeJuridique", None
@@ -138,8 +138,8 @@ class JsonHandler:
 
         if morale_obj:
             denomination = morale_obj["identite"]["entreprise"]["denomination"]
-            siren = morale_obj["identite"]["entreprise"]["siren"]
-            nicSiege = morale_obj["identite"]["entreprise"]["nicSiege"]
+            siren = str(morale_obj["identite"]["entreprise"]["siren"])
+            nicSiege = str(morale_obj["identite"]["entreprise"]["nicSiege"])
             codeApe = morale_obj["identite"]["entreprise"]["codeApe"]
             formeJuridique = morale_obj["identite"]["entreprise"]["formeJuridique"]
             pays = morale_obj["adresseEntreprise"]["adresse"]["pays"]
@@ -203,8 +203,8 @@ class JsonHandler:
             ]["prenoms"]
             prenom = ",".join(prenom_list)
             denomination = nom + " " + prenom
-            siren = physique_obj["identite"]["entreprise"]["siren"]
-            nicSiege = physique_obj["identite"]["entreprise"]["nicSiege"]
+            siren = str(physique_obj["identite"]["entreprise"]["siren"])
+            nicSiege = str(physique_obj["identite"]["entreprise"]["nicSiege"])
             codeApe = physique_obj["identite"]["entreprise"]["codeApe"]
             formeJuridique = physique_obj["identite"]["entreprise"].get(
                 "formeJuridique", None

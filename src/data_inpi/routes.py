@@ -69,7 +69,7 @@ def get_token():
 
 
 @bp.route("/inpi/siren/<siren>", methods=["GET"])
-def get_inpi_data_by_siren(siren):
+def get_inpi_data_by_siren(siren: str):
 
     api = ApiRequest(
         auth_url=Config.auth_url,
@@ -89,7 +89,7 @@ def get_inpi_data_by_siren(siren):
 
 
 @bp.route("/inpi/name/<companyName>", methods=["GET"])
-def get_inpi_data_by_name(companyName):
+def get_inpi_data_by_name(companyName: str):
 
     api = ApiRequest(
         auth_url=Config.auth_url,

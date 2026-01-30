@@ -457,10 +457,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const company = companiesToSearch[i];
 
       try {
-        const data =
-          company.type === "siren"
-            ? await mockApiCallSingle(parseFloat(company.query), company.type)
-            : await mockApiCallSingle(company.query, company.type);
+        const data = await mockApiCallSingle(company.query, company.type)
 
         if (data && data.results && data.results.length > 0) {
           foundCount++;
